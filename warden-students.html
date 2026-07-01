@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Warden Students</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="min-h-screen bg-gradient-to-br from-indigo-50 via-blue-50 to-cyan-50 p-6">
+
+  <!-- HEADER -->
+  <div class="flex justify-between items-center mb-8">
+
+    <div>
+
+      <h1 class="text-3xl font-bold text-gray-800">
+        👨‍🎓 Student Tracking
+      </h1>
+
+      <p class="text-gray-500">
+        Track hostel students & activities
+      </p>
+
+    </div>
+
+    <button onclick="goBack()"
+      class="bg-indigo-500 hover:bg-indigo-600 text-white px-4 py-2 rounded-2xl shadow-lg">
+
+      ← Back
+
+    </button>
+
+  </div>
+
+  <!-- SEARCH -->
+  <div class="mb-6">
+
+    <input
+      type="text"
+      id="search"
+      placeholder="Search student..."
+      oninput="searchStudents()"
+      class="w-full p-4 rounded-2xl border border-gray-200 shadow focus:outline-none focus:ring-2 focus:ring-indigo-300">
+
+  </div>
+
+  <!-- STUDENTS -->
+  <div id="studentList"
+    class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+
+    Loading...
+
+  </div>
+
+<script>
+
+let allStudents = [];
+
+async function loadStudents() {
+
+  try {
+
+    const res = await fetch("/users");
+
+    const users = await res.json();
+
+    const students =
+      users.filter(u => u.role === "student");
+
+    allStudents = students;
+
+    renderStudents(students);
+
+  }
+
+  catch (err) {
+
+    console.log(err);
+
+  }
+
+}
+
+function renderStudents(students) {
+
+  const container =
+    document.getElementById("studentList");
+
+  if (!students.length) {
+
+    container.innerHTML =
+      "<p>No students found</p>";
+
+    return;
+  }
+
+  container.innerHTML = students.map(s => `
+
+    <div onclick="openStudent('${s._id}')"
+class="bg-white rounded-3xl shadow-xl p-5 cursor-pointer hover:scale-105 hover:shadow-2xl transition">
+
+      <div class="flex justify-between items-center mb-4">
+
+        <div>
+
+          <h2 class="text-xl font-bold text-gray-800">
+            👤 ${s.name}
+          </h2>
+
+          <p class="text-sm text-gray-500">
+            ${s.email}
+          </p>
+
+        </div>
+
+        <div class="bg-indigo-100 text-indigo-600 px-3 py-1 rounded-xl text-sm">
+          Student
+        </div>
+
+      </div>
+
+      <div class="space-y-2 text-gray-600 text-sm">
+
+        <p>
+          📞 ${s.phone || "Not Added"}
+        </p>
+
+        <p>
+          🏠 ${
+            s.room
+              ? s.room.roomNumber
+              : "Not Assigned"
+          }
+        </p>
+
+        <p>
+          🌆 ${s.city || "Not Added"}
+        </p>
+
+      </div>
+
+    </div>
+
+  `).join("");
+
+}
+
+function searchStudents() {
+
+  const value =
+    document.getElementById("search")
+    .value
+    .toLowerCase();
+
+  const filtered =
+    allStudents.filter(s =>
+
+      s.name.toLowerCase().includes(value) ||
+
+      s.email.toLowerCase().includes(value)
+
+    );
+
+  renderStudents(filtered);
+
+}
+
+async function openStudent(id) {
+
+  const student =
+    allStudents.find(s => s._id === id);
+
+  if (!student) return;
+
+  alert(
+
+`Student Details
+
+Name: ${student.name}
+
+Email: ${student.email}
+
+Phone: ${student.phone || "Not Added"}
+
+Room:
+${student.room
+  ? student.room.roomNumber
+  : "Not Assigned"}
+
+City:
+${student.city || "Not Added"}
+
+Address:
+${student.address || "Not Added"}
+
+Emergency:
+${student.emergency || "Not Added"}
+`
+
+  );
+
+}
+
+function goBack() {
+
+  window.location.href =
+    "warden-dashboard.html";
+
+}
+
+loadStudents();
+
+</script>
+
+</body>
+</html>

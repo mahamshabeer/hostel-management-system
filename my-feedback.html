@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>My Feedback</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="bg-gray-900 text-white p-6">
+
+  <h1 class="text-3xl font-bold mb-6">🧾 My Feedback History</h1>
+
+  <div id="feedbackList" class="space-y-4"></div>
+
+<script>
+
+async function loadMyFeedback() {
+
+  const userId = localStorage.getItem("userId");
+
+  const res = await fetch("/feedbacks?userId=" + userId);
+  const data = await res.json();
+
+  const container = document.getElementById("feedbackList");
+
+  if (!data.length) {
+    container.innerHTML = "<p>No feedback found</p>";
+    return;
+  }
+
+  container.innerHTML = data.map(f => `
+
+    <div class="p-4 rounded-xl bg-white/10 border border-white/20">
+
+      <div class="flex justify-between">
+
+        <span class="font-bold">
+          ${new Date(f.createdAt).toLocaleDateString()}
+        </span>
+
+        <span class="${
+          f.sentiment === "positive"
+          ? "text-green-400"
+          : "text-red-400"
+        } font-bold">
+
+          ${f.sentiment}
+
+        </span>
+
+      </div>
+
+      <p class="mt-2 text-gray-200">
+        ${f.comment}
+      </p>
+
+    </div>
+
+  `).join("");
+
+}
+
+loadMyFeedback();
+
+</script>
+
+</body>
+</html>

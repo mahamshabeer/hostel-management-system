@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>User Management</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="min-h-screen p-6 bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 overflow-x-hidden">
+
+  
+
+<!-- HEADER -->
+<div class="mb-6">
+  <h1 class="text-3xl font-bold text-gray-800">👥 User Management</h1>
+  <p class="text-gray-500 text-sm mt-1">Assign rooms & manage students</p>
+</div>
+
+<!-- SEARCH + FILTER -->
+<div class="flex gap-3 mb-6">
+
+  <input
+    type="text"
+    id="search"
+    oninput="searchUsers()"
+    placeholder="Search users..."
+    class="flex-1 p-3 rounded-2xl border shadow-sm focus:outline-none focus:ring-2 focus:ring-purple-300"
+  >
+
+  <select
+    id="roleFilter"
+    onchange="filterUsers()"
+    class="p-3 rounded-2xl border shadow-sm focus:outline-none">
+
+    <option value="all">All Roles</option>
+    <option value="student">Student</option>
+    <option value="warden">Warden</option>
+    <option value="admin">Admin</option>
+
+  </select>
+
+</div>
+
+<!-- STATS -->
+<div class="grid grid-cols-4 gap-4 mb-6">
+
+  <div onclick="navigate('users.html')"
+class="bg-gradient-to-r from-indigo-500 to-purple-500
+cursor-pointer hover:scale-105 transition
+text-white p-4 rounded-2xl shadow-lg text-center">
+
+    <h2 class="text-sm opacity-80">Total Users</h2>
+
+    <p id="totalUsers"
+      class="text-3xl font-bold mt-2">
+      0
+    </p>
+
+  </div>
+
+  <div onclick="navigate('users.html?role=student')"
+class="bg-gradient-to-r from-green-500 to-emerald-500
+cursor-pointer hover:scale-105 transition
+text-white p-4 rounded-2xl shadow-lg text-center">
+
+    <h2 class="text-sm opacity-80">Students</h2>
+
+    <p id="studentCount"
+      class="text-3xl font-bold mt-2">
+      0
+    </p>
+
+  </div>
+
+  <div onclick="navigate('users.html?role=warden')"
+class="bg-gradient-to-r from-blue-500 to-cyan-500
+cursor-pointer hover:scale-105 transition
+text-white p-4 rounded-2xl shadow-lg text-center">
+    <h2 class="text-sm opacity-80">Wardens</h2>
+
+    <p id="wardenCount"
+      class="text-3xl font-bold mt-2">
+      0
+    </p>
+
+  </div>
+
+   <div onclick="navigate('users.html?role=admin')"
+class="bg-gradient-to-r from-pink-500 to-rose-500
+cursor-pointer hover:scale-105 transition
+text-white p-4 rounded-2xl shadow-lg text-center">
+
+    <h2 class="text-sm opacity-80">Admins</h2>
+
+    <p id="adminCount"
+      class="text-3xl font-bold mt-2">
+      0
+    </p>
+
+  </div>
+
+</div>
+
+
+<!-- GRID -->
+<div id="userList" class="grid grid-cols-1 md:grid-cols-2 gap-5"></div>
+
+<div id="toast"
+  class="hidden fixed top-5 right-5 bg-gray-800 text-white px-4 py-3 rounded-lg shadow-lg z-50">
+</div>
+
+<script>
+
+  let allUsers = [];
+  let rooms = [];
+
+async function loadRooms() {
+  const res = await fetch("/rooms");
+  rooms = await res.json();
+}
+
+async function loadUsers() {
+
+  const params = new URLSearchParams(window.location.search);
+  const role = params.get("role");
+
+  const res = await fetch("/users");
+  const users = await res.json();
+
+  let filtered = users;
+
+  if (role && role !== "all") {
+    filtered = users.filter(u => u.role === role);
+  }
+
+  allUsers = filtered;
+
+  renderUsers(allUsers);
+
+  loadUserStats();
+}
+
+//RENDER USERS
+
+  function renderUsers(users) {
+
+  document.getElementById("userList").innerHTML =
+    users.map(u => `
+
+      <div class="bg-white/90 backdrop-blur-md border border-white
+        shadow-md rounded-3xl p-5 transition-all duration-200
+        hover:shadow-xl">
+
+        <!-- USER INFO -->
+        <div class="flex justify-between items-center mb-3">
+
+          <div>
+            <h2 class="text-lg font-bold text-gray-800">
+              👤 ${u.name}
+            </h2>
+
+            <p class="text-xs text-gray-500">
+              ${u.email}
+            </p>
+          </div>
+
+          <span class="text-xs px-3 py-1 rounded-full
+            ${u.role === 'admin'
+              ? 'bg-purple-100 text-purple-600'
+              : u.role === 'warden'
+              ? 'bg-blue-100 text-blue-600'
+              : 'bg-green-100 text-green-600'}">
+
+            ${u.role}
+
+          </span>
+
+        </div>
+
+        <!-- ROOM -->
+        <p class="text-sm text-gray-600 mb-4">
+          Room:
+          <b>
+  ${u.room ? u.room.roomNumber : "Not Assigned"}
+</b>
+        </p>
+
+        <!-- ACTIONS -->
+        <div class="flex gap-2 items-center">
+
+          <select id="room-${u._id}"
+            class="flex-1 p-2 border rounded-xl text-sm
+            focus:outline-none focus:ring-2 focus:ring-purple-300">
+
+            ${rooms.map(r => `
+              <option value="${r._id}"
+              ${u.room && (
+              u.room._id === r._id ||
+              u.room === r._id
+              ) ? "selected" : ""}>
+                🏠 Room ${r.roomNumber}
+                (${r.students.length}/${r.capacity})
+              </option>
+            `).join("")}
+
+          </select>
+
+          <!-- ASSIGN -->
+          <button onclick="assignRoom('${u._id}')"
+            class="bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500
+            text-white px-4 py-2 rounded-xl shadow">
+
+            Assign
+
+          </button>
+
+          <button onclick="editUser('${u._id}', '${u.name}', '${u.email}', '${u.role}')"
+  class="bg-yellow-500 hover:bg-yellow-600 text-white
+  px-4 py-2 rounded-xl shadow">
+
+  Edit
+
+</button>
+
+          <!-- DELETE -->
+          <button onclick="deleteUser('${u._id}')"
+            class="bg-red-500 hover:bg-red-600 text-white
+            px-4 py-2 rounded-xl shadow">
+
+            Delete
+
+          </button>
+
+        </div>
+
+      </div>
+
+    `).join("");
+}
+// SEARCH USERS
+function searchUsers() {
+
+  const val = document
+    .getElementById("search")
+    .value
+    .toLowerCase();
+
+  const filtered = allUsers.filter(u =>
+    u.name.toLowerCase().includes(val) ||
+    u.email.toLowerCase().includes(val)
+  );
+
+  renderUsers(filtered);
+}
+//FILTER USERS
+
+function filterUsers() {
+
+  const role = document.getElementById("roleFilter").value;
+
+  if (role === "all") {
+    renderUsers(allUsers);
+    return;
+  }
+
+  const filtered = allUsers.filter(u => u.role === role);
+  renderUsers(filtered);
+}
+//STATS
+function loadUserStats() {
+
+  document.getElementById("totalUsers").innerText =
+    allUsers.length;
+
+  document.getElementById("studentCount").innerText =
+    allUsers.filter(u => u.role === "student").length;
+
+  document.getElementById("wardenCount").innerText =
+    allUsers.filter(u => u.role === "warden").length;
+
+  document.getElementById("adminCount").innerText =
+    allUsers.filter(u => u.role === "admin").length;
+}
+
+
+// ASSIGN
+async function assignRoom(userId) {
+
+  const roomId = document.getElementById("room-" + userId).value;
+  const selectedRoom = rooms.find(r => r._id === roomId);
+
+  // 👇 ADD THIS HERE
+if (!selectedRoom.students) selectedRoom.students = [];
+
+
+if (selectedRoom.students.length >= selectedRoom.capacity) {
+
+  alert("Room is already full ❌");
+
+  return;
+}
+
+  const res = await fetch("/rooms/assign", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ userId, roomId })
+  });
+
+  const data = await res.json();
+  if (data.message.includes("success")) {
+  showToast(data.message, "success");
+} else {
+  showToast(data.message, "error");
+}
+
+  loadUsers();
+}
+
+async function editUser(id, oldName, oldEmail, oldRole) {
+
+  const name = prompt("Enter new name", oldName);
+
+  const email = prompt("Enter new email", oldEmail);
+
+  const role = prompt("Enter role (student/warden/admin)", oldRole);
+
+  if (!name || !email || !role) {
+
+    alert("All fields required");
+
+    return;
+  }
+
+  const res = await fetch("/users/update/" + id, {
+
+    method: "PUT",
+
+    headers: {
+      "Content-Type": "application/json"
+    },
+
+    body: JSON.stringify({
+      name,
+      email,
+      role
+    })
+  });
+
+  const data = await res.json();
+
+  alert("User updated successfully ✔");
+
+  loadUsers();
+}
+
+// DELETE
+async function deleteUser(id) {
+  await fetch("/users/" + id, { method: "DELETE" });
+  loadUsers();
+  showToast("User deleted successfully", "success");
+}
+
+// INIT
+(async function () {
+  await loadRooms();
+  await loadUsers();
+})();
+
+function showToast(message, type = "success") {
+
+  const toast = document.getElementById("toast");
+
+  toast.innerText = message;
+
+  toast.className = `
+    fixed top-5 right-5 px-4 py-3 rounded-lg shadow-lg z-50 text-white
+    ${type === "success" ? "bg-green-500" : "bg-red-500"}
+  `;
+
+  toast.classList.remove("hidden");
+
+  setTimeout(() => {
+    toast.classList.add("hidden");
+  }, 3000);
+}
+
+function filterByRole(role) {
+
+  if (role === "all") {
+    renderUsers(allUsers);
+    return;
+  }
+
+  const filtered = allUsers.filter(u => u.role === role);
+  renderUsers(filtered);
+}
+
+function navigate(page) {
+  window.location.href = page;
+}
+
+</script>
+
+</body>
+</html>

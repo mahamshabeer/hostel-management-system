@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Profile</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="min-h-screen flex items-center justify-center p-6
+bg-cover bg-center bg-no-repeat"
+style="background-image: url('https://images.unsplash.com/photo-1520607162513-77705c0f0d4a?auto=format&fit=crop&w=1500&q=80');">
+
+<!-- PROFILE CARD -->
+<div class="w-full max-w-2xl bg-white/90 backdrop-blur-md shadow-xl rounded-3xl p-6 border border-white">
+
+  <h2 class="text-2xl font-bold text-gray-800 mb-1">👤 My Profile</h2>
+  <p class="text-sm text-gray-500 mb-6">Manage your personal and hostel information</p>
+
+  <!-- TOP SECTION -->
+  <div class="flex flex-col md:flex-row gap-6 mb-6">
+
+    <!-- PROFILE IMAGE -->
+<div class="flex flex-col items-center relative group">
+
+  <img id="profilePic"
+    src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png"
+    class="w-28 h-28 rounded-full border-4 border-indigo-200 shadow-lg object-cover">
+
+  <!-- hidden file input -->
+  <input type="file" id="profilePicFile" class="hidden">
+
+  <!-- camera overlay -->
+  <div onclick="document.getElementById('profilePicFile').click()"
+    class="absolute inset-0 flex items-center justify-center
+           bg-black/40 opacity-0 group-hover:opacity-100
+           rounded-full cursor-pointer transition text-white text-2xl">
+
+    📷
+  </div>
+
+</div>
+
+    <!-- BASIC INFO -->
+    <div class="flex-1 space-y-3">
+
+      <div>
+        <label class="text-sm text-gray-600">Name</label>
+        <input id="name"
+          class="w-full p-3 border rounded-xl focus:ring-2 focus:ring-indigo-300">
+      </div>
+
+      <div>
+        <label class="text-sm text-gray-600">Email</label>
+        <input id="email" disabled
+          class="w-full p-3 border rounded-xl bg-gray-100 text-gray-500">
+      </div>
+
+      <div>
+        <label class="text-sm text-gray-600">Phone</label>
+        <input id="phone"
+          class="w-full p-3 border rounded-xl focus:ring-2 focus:ring-indigo-300">
+      </div>
+
+    </div>
+  </div>
+
+  <!-- SECOND SECTION -->
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+
+    <div>
+      <label class="text-sm text-gray-600">Role</label>
+      <input id="role" disabled
+        class="w-full p-3 border rounded-xl bg-gray-100 text-gray-500">
+    </div>
+
+    <div>
+      <label class="text-sm text-gray-600">Assigned Room</label>
+      <input id="room" disabled
+        class="w-full p-3 border rounded-xl bg-gray-100 text-gray-500">
+    </div>
+
+    <div>
+      <label class="text-sm text-gray-600">City</label>
+      <input id="city"
+        class="w-full p-3 border rounded-xl focus:ring-2 focus:ring-indigo-300">
+    </div>
+
+    <div>
+      <label class="text-sm text-gray-600">Address</label>
+      <input id="address"
+        class="w-full p-3 border rounded-xl focus:ring-2 focus:ring-indigo-300">
+    </div>
+
+  </div>
+
+  <!-- EMERGENCY CONTACT -->
+  <div class="mb-6">
+    <label class="text-sm text-gray-600">Emergency Contact</label>
+    <input id="emergency"
+      class="w-full p-3 border rounded-xl focus:ring-2 focus:ring-indigo-300">
+  </div>
+
+  <!-- BUTTON -->
+  <button onclick="updateProfile()"
+    class="w-full bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500
+           text-white py-3 rounded-xl shadow-md
+           hover:brightness-110 active:scale-[0.98]
+           transition-all duration-200">
+
+    Update Profile
+  </button>
+
+</div>
+
+<script>
+
+let userId = localStorage.getItem("userId");
+
+async function loadProfile() {
+
+  try {
+    const res = await fetch("/users/" + userId);
+    const user = await res.json();
+
+    if (!user) return;
+
+    document.getElementById("name").value = user.name || "";
+    document.getElementById("email").value = user.email || "";
+    document.getElementById("phone").value = user.phone || "";
+    document.getElementById("role").value = user.role || "Not set";
+
+    document.getElementById("room").value =
+      user.room?.roomNumber || "Not Assigned";
+
+    document.getElementById("city").value = user.city || "Not set";
+    document.getElementById("address").value = user.address || "Not set";
+    document.getElementById("emergency").value = user.emergency || "Not set";
+
+    // ✅ PROFILE IMAGE FIX (FINAL)
+    document.getElementById("profilePic").src =
+      user.profilePic
+        ? user.profilePic.startsWith("http")
+            ? user.profilePic
+            : window.location.origin + user.profilePic
+        : "https://cdn-icons-png.flaticon.com/512/3135/3135715.png";
+
+  } catch (error) {
+    console.log("Profile load error:", error);
+  }
+}
+
+// UPDATE PROFILE
+async function updateProfile() {
+
+  const name = document.getElementById("name").value;
+  const phone = document.getElementById("phone").value;
+  const city = document.getElementById("city").value;
+  const address = document.getElementById("address").value;
+  const emergency = document.getElementById("emergency").value;
+
+  const formData = new FormData();
+
+  formData.append("name", name);
+  formData.append("phone", phone);
+  formData.append("city", city);
+  formData.append("address", address);
+  formData.append("emergency", emergency);
+
+  const file = document.getElementById("profilePicFile").files[0];
+  if (file) {
+    formData.append("profilePic", file);
+  }
+
+  await fetch("/users/update/" + userId, {
+    method: "PUT",
+    body: formData
+  });
+
+  alert("Profile Updated Successfully ✨");
+}
+
+loadProfile();
+
+</script>
+
+</body>
+</html>

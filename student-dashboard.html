@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Student Dashboard</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <style>
+  body {
+    font-family: sans-serif;
+  }
+
+  /* PREMIUM CARD STYLE */
+  .card {
+  background: linear-gradient(145deg, #ffffff, #f3f4f6);
+  border-radius: 22px;
+  padding: 20px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+  transition: all 0.3s ease;
+  border: 1px solid rgba(255,255,255,0.6);
+  position: relative;
+  overflow: hidden;
+  z-index: 1;
+}
+
+  /* soft glow effect */
+  .card::before {
+  content: "";
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle, rgba(99,102,241,0.08), transparent 60%);
+  transform: rotate(25deg);
+  z-index: 0;
+  pointer-events: none;
+}
+
+.card * {
+  position: relative;
+  z-index: 2;
+}
+
+  .card:hover {
+    transform: translateY(-6px) scale(1.01);
+    box-shadow: 0 18px 40px rgba(0,0,0,0.12);
+  }
+
+  /* BUTTONS */
+  .btn {
+    transition: 0.25s ease;
+    font-weight: 500;
+  }
+
+  .btn:hover {
+    transform: scale(1.04);
+    filter: brightness(1.05);
+  }
+
+  /* TEXT CLEAN LOOK */
+  .card p {
+    margin: 4px 0;
+    font-size: 14px;
+  }
+</style>
+</head>
+
+<body class="min-h-screen bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50">
+
+<!-- TOP BAR -->
+<div class="bg-white shadow-md p-4 flex justify-between items-center sticky top-0 z-50">
+  <h1 class="text-xl font-bold text-gray-700">🎓 Student Dashboard</h1>
+  <button onclick="logout()" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg btn">
+    Logout
+  </button>
+</div>
+
+<!-- MAIN GRID -->
+<div class="p-6 grid grid-cols-1 md:grid-cols-3 gap-6">
+
+  <!-- PROFILE -->
+  <div class="card">
+    <h2 class="font-bold text-xl mb-4 text-indigo-600 flex items-center gap-2">
+  👤 My Profile
+</h2>
+    <p id="name" class="text-gray-700"></p>
+    <p id="email" class="text-gray-600"></p>
+    <p id="phone" class="text-gray-600"></p>
+    <p id="role" class="text-gray-600"></p>
+    <p id="rollNo" class="text-gray-600"></p>
+    <p id="city" class="text-gray-600"></p>
+    <p id="emergency" class="text-gray-600"></p>
+    <p id="address" class="text-gray-600"></p>
+
+    <button onclick="window.location.href='student-profile.html'"
+      class="mt-4 w-full bg-indigo-500 hover:bg-indigo-600 text-white py-2 rounded-lg btn">
+      Edit Profile
+    </button>
+  </div>
+
+  <!-- ROOM -->
+  <div class="card">
+    <h2 class="font-bold text-lg mb-4 text-blue-600">🏠 My Room</h2>
+    <p id="room" class="text-gray-700"></p>
+
+    <button onclick="requestRoom()"
+      class="mt-4 w-full bg-blue-500 hover:bg-blue-600 text-white py-2 rounded-lg btn">
+      Request Room
+    </button>
+  </div>
+
+  <!-- FEES -->
+  <div class="card">
+    <h2 class="font-bold text-lg mb-4 text-green-600">💰 My Fees</h2>
+
+    <p id="totalFees" class="text-gray-700"></p>
+    <p id="paidFees" class="text-gray-700"></p>
+    <p id="pendingFees" class="text-gray-700"></p>
+
+    <p id="feeStatus" class="font-bold mt-3"></p>
+  </div>
+
+</div>
+
+
+<div class="px-4">
+
+  <div onclick="navigate('feedback.html')"
+  class="bg-gradient-to-r from-indigo-500 to-cyan-500 text-white p-5 rounded-2xl shadow-lg cursor-pointer hover:scale-105 transition text-center">
+
+  <h2 class="text-lg font-bold">📝 Give Feedback</h2>
+  <p class="text-sm mt-2">Share your hostel experience</p>
+
+</div>
+
+<!-- 👇 THIS ONE ADD HERE -->
+<div onclick="navigate('my-feedback.html')" 
+  class="bg-purple-500 text-white p-5 rounded-2xl shadow-lg cursor-pointer hover:scale-105 transition text-center mt-4">
+
+  🧾 My Feedback History
+
+</div>
+
+</div>
+
+<!-- QUICK ACTIONS -->
+<div class="p-6">
+  <div class="card">
+    <h2 class="font-bold text-lg mb-4 text-purple-600">⚡ Quick Actions</h2>
+
+    <div class="grid grid-cols-2 gap-3">
+      <a href="student-complaints.html"
+        class="bg-yellow-500 hover:bg-yellow-600 text-white p-3 rounded-lg text-center btn">
+        📝 Complaints
+      </a>
+
+      <a href="notifications.html"
+        class="bg-purple-500 hover:bg-purple-600 text-white p-3 rounded-lg text-center btn">
+        🔔 Notifications
+      </a>
+    </div>
+  </div>
+</div>
+
+<!-- AVAILABLE ROOMS -->
+<div class="p-6">
+  <div class="card">
+    <h2 class="font-bold text-lg mb-4 text-pink-600">🏠 Available Rooms</h2>
+    <div id="availableRooms"></div>
+  </div>
+</div>
+
+<!-- REQUESTS -->
+<div class="p-6">
+  <div class="card">
+    <h2 class="font-bold text-lg mb-4 text-orange-600">📩 My Room Requests</h2>
+    <div id="requests"></div>
+  </div>
+</div>
+
+<!-- COMPLAINTS -->
+<div class="p-6">
+  <div class="card">
+    <h2 class="font-bold text-lg mb-4 text-red-600">📝 My Complaints</h2>
+    <div id="complaints"></div>
+  </div>
+</div>
+
+<script>
+
+  const userId = localStorage.getItem("userId");
+let currentUser = null;
+
+  window.addEventListener("DOMContentLoaded", () => {
+
+  const role = localStorage.getItem("role");
+
+  // ❌ NOT LOGGED IN
+  if (!role) {
+    window.location.href = "auth.html";
+    return;
+  }
+
+  // ❌ WRONG ROLE
+  if (role !== "student") {
+    window.location.href = "auth.html";
+    return;
+  }
+
+  // ✅ SAFE START (ONLY CALL FUNCTIONS IF EXIST)
+  if (typeof loadUser === "function") loadUser();
+  if (typeof loadMyRequests === "function") loadMyRequests();
+  if (typeof loadComplaints === "function") loadComplaints();
+  if (typeof loadFees === "function") loadFees();
+  if (typeof loadAvailableRooms === "function") loadAvailableRooms();
+
+});
+// ================= PROFILE =================
+async function loadUser() {
+
+  const res = await fetch("/users");
+  const users = await res.json();
+
+  currentUser = users.find(u => u._id === userId);
+
+  if (!currentUser) return;
+
+  document.getElementById("name").innerText = "Name: " + currentUser.name;
+  document.getElementById("email").innerText = "Email: " + currentUser.email;
+  document.getElementById("phone").innerText = "Phone: " + currentUser.phone;
+  document.getElementById("role").innerText = "Role: " + currentUser.role;
+  document.getElementById("rollNo").innerText =
+  "Roll No: " + (currentUser.rollNo || "Not Added");
+
+document.getElementById("city").innerText =
+  "City: " + (currentUser.city || "Not Added");
+
+document.getElementById("emergency").innerText =
+  "Emergency: " + (currentUser.emergency || "Not Added");
+
+document.getElementById("address").innerText =
+  "Address: " + (currentUser.address || "Not Added");
+
+  document.getElementById("room").innerText =
+    currentUser.room
+      ? "Room: " + (currentUser.room.roomNumber || "Assigned")
+      : "Not Assigned";
+}
+
+// ================= REQUEST ROOM =================
+async function requestRoom() {
+
+  try {
+
+    if (!currentUser) {
+      alert("User not loaded");
+      return;
+    }
+
+    // FETCH ROOMS
+    const roomsRes = await fetch("/rooms");
+    const rooms = await roomsRes.json();
+
+    if (!Array.isArray(rooms) || rooms.length === 0) {
+      alert("No rooms available");
+      return;
+    }
+
+    // SHOW ROOM NUMBERS
+    let roomText = "";
+
+    rooms.forEach((room, index) => {
+
+      roomText += `${index + 1}. Room ${room.roomNumber}\n`;
+
+    });
+
+    const selected = prompt(
+      "Select Room Number:\n\n" + roomText
+    );
+
+    if (!selected) return;
+
+    // FIND ROOM
+    const room = rooms.find(r =>
+  String(r.roomNumber) === String(selected) ||
+  String(r.roomNumber) === String(selected.replace("Room ", ""))
+);
+
+    if (!room || !room._id) {
+  alert("Room not found properly. Try again.");
+  return;
+}
+
+    // SEND REQUEST
+    const res = await fetch("/send-request", {
+
+      method: "POST",
+
+      headers: {
+        "Content-Type": "application/json"
+      },
+
+      body: JSON.stringify({
+
+        studentName: currentUser.name,
+        userId: currentUser._id,
+        roomId: room._id
+
+      })
+
+    });
+
+    const data = await res.json();
+
+    alert(data.message || "Request Sent ✔");
+
+    loadMyRequests();
+
+  } catch (err) {
+
+    console.log(err);
+
+    alert("Error creating request");
+
+  }
+}
+// ================= REQUESTS =================
+async function loadMyRequests() {
+
+  const userId = localStorage.getItem("userId");
+
+  if (!userId) {
+    console.log("No userId found");
+    return;
+  }
+
+  const res = await fetch(`/student/requests/${userId}`);
+  const data = await res.json();
+
+  const container = document.getElementById("requests");
+
+  if (!Array.isArray(data) || data.length === 0) {
+
+    container.innerHTML = "No Requests";
+
+    return;
+  }
+
+  container.innerHTML = data.map(r => `
+
+    <div class="border p-3 mb-3 rounded">
+
+      <p>
+        <b>Room:</b>
+        ${r.roomId?.roomNumber || "Pending"}
+      </p>
+
+      <p>
+        <b>Status:</b>
+        ${r.status}
+      </p>
+
+      ${r.status === "pending" ? `
+
+        <button
+          onclick="cancelRequest('${r._id}')"
+          class="bg-red-500 text-white px-3 py-1 mt-2 rounded">
+
+          Cancel Request
+
+        </button>
+
+      ` : ""}
+
+    </div>
+
+  `).join("");
+}
+// ================= CANCEL REQUEST =================
+async function cancelRequest(id) {
+
+  if (!confirm("Are you sure you want to cancel this request?")) return;
+
+  const res = await fetch(`/requests/${id}`, {
+    method: "DELETE"
+  });
+
+  const data = await res.json();
+
+  alert(data.message || "Request cancelled");
+
+ loadMyRequests();
+}
+
+//LOAD FEE
+async function loadFees() {
+
+  const res = await fetch("/fees");
+
+  const fees = await res.json();
+
+  const myFees = fees.filter(f =>
+    String(f.userId?._id || f.userId) === String(userId)
+  );
+
+  const total =
+    myFees.reduce((sum, f) => sum + f.amount, 0);
+
+  const paid =
+    myFees
+      .filter(f => f.status === "paid")
+      .reduce((sum, f) => sum + f.amount, 0);
+
+  const pending = total - paid;
+
+  document.getElementById("totalFees").innerText =
+    "Total Fees: " + total;
+
+  document.getElementById("paidFees").innerText =
+    "Paid: " + paid;
+
+  document.getElementById("pendingFees").innerText =
+    "Pending: " + pending;
+
+  document.getElementById("feeStatus").innerText =
+    pending > 0 ? "Status: Unpaid ❌" : "Status: Paid ✅";
+}
+//AVAILABE RPPMS
+async function loadAvailableRooms() {
+
+  const res = await fetch("/rooms");
+
+  const rooms = await res.json();
+
+  const container =
+    document.getElementById("availableRooms");
+
+  if (!rooms.length) {
+
+    container.innerHTML = "No rooms found";
+
+    return;
+  }
+
+  container.innerHTML = rooms.map(r => `
+
+    <div class="border rounded-xl p-3 mb-3">
+
+      <p>
+        <b>Room:</b> ${r.roomNumber}
+      </p>
+
+      <p>
+        <b>Occupancy:</b>
+        ${r.students.length}/${r.capacity}
+      </p>
+
+      <p class="${
+        r.students.length >= r.capacity
+          ? 'text-red-500'
+          : 'text-green-500'
+      } font-bold">
+
+        ${
+          r.students.length >= r.capacity
+            ? 'FULL ❌'
+            : 'AVAILABLE ✅'
+        }
+
+      </p>
+
+    </div>
+
+  `).join("");
+}
+
+// ================= COMPLAINTS =================
+async function loadComplaints() {
+
+  try {
+
+    const res = await fetch(
+      `/complaints/my/${userId}`
+    );
+
+    const data = await res.json();
+
+    const container =
+      document.getElementById("complaints");
+
+    if (!Array.isArray(data)) {
+
+      container.innerHTML =
+        "<p>No complaints found</p>";
+
+      return;
+
+    }
+
+    if (data.length === 0) {
+
+      container.innerHTML =
+        "<p>No complaints found</p>";
+
+      return;
+
+    }
+
+    container.innerHTML = data.map(c => `
+
+      <div class="border p-3 mb-3 rounded-xl shadow">
+
+        <p>
+          <b>Message:</b>
+          ${c.message}
+        </p>
+
+        <p class="mt-1">
+          <b>Status:</b>
+          ${c.status}
+        </p>
+
+        ${c.status === "pending" ? `
+
+          <button
+            onclick="cancelComplaint('${c._id}')"
+            class="bg-red-500 text-white px-3 py-1 mt-3 rounded">
+
+            Cancel Complaint
+
+          </button>
+
+        ` : ""}
+
+      </div>
+
+    `).join("");
+
+  }
+
+  catch (err) {
+
+    console.log("LOAD COMPLAINT ERROR:", err);
+
+  }
+
+}
+// ================= CANCEL COMPLAINT =================
+async function cancelComplaint(id) {
+
+  if (!confirm("Cancel this complaint?")) return;
+
+  const res = await fetch(`/complaints/${id}`, {
+    method: "DELETE"
+  });
+
+  const data = await res.json();
+
+  alert(data.message || "Complaint cancelled");
+
+  loadComplaints();
+}
+
+// ================= LOGOUT =================
+function logout() {
+  localStorage.clear();
+  window.location.href = "login.html";
+}
+
+// INIT
+(async function () {
+
+  await loadUser();
+
+  await loadMyRequests();
+
+  await loadComplaints();
+
+  await loadFees();
+
+  await loadAvailableRooms();
+
+})();
+
+function navigate(page) {
+  window.location.href = page;
+}
+
+</script>
+
+</body>
+</html>

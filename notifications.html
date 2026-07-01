@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Notifications</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="bg-gradient-to-br from-indigo-100 via-purple-100 to-pink-100 p-6">
+
+<h1 class="text-3xl font-bold mb-6">🔔 Notifications Center</h1>
+
+<!-- SEND BOX -->
+<div class="bg-white/70 backdrop-blur-lg p-6 rounded-2xl shadow-xl border mb-6">
+
+  <h2 class="text-lg font-bold mb-3">Send New Notification</h2>
+
+  <textarea id="msg"
+    placeholder="Write notification message..."
+    class="w-full border rounded-xl p-3 h-28 focus:outline-none focus:ring-2 focus:ring-purple-400"></textarea>
+
+  <button onclick="sendNotification()"
+    class="mt-3 bg-gradient-to-r from-purple-500 to-indigo-600 text-white px-6 py-2 rounded-xl hover:scale-105 transition">
+    🚀 Send Notification
+  </button>
+
+</div>
+
+<!-- LIST -->
+<div class="bg-white/70 backdrop-blur-lg p-6 rounded-2xl shadow-xl border">
+
+  <h2 class="text-lg font-bold mb-4">All Notifications</h2>
+
+  <ul id="list" class="space-y-3"></ul>
+
+</div>
+
+<script>
+
+// LOAD NOTIFICATIONS
+async function loadNotifications() {
+
+  const res = await fetch("/notifications");
+  const data = await res.json();
+
+  if (data.length === 0) {
+    document.getElementById("list").innerHTML =
+      `<p class="text-gray-500">No notifications yet</p>`;
+    return;
+  }
+
+  document.getElementById("list").innerHTML =
+    data.map(n => `
+      <li class="p-4 rounded-2xl shadow flex justify-between items-center
+        bg-gradient-to-r from-white to-purple-50 hover:shadow-lg transition">
+
+        <div class="flex flex-col">
+          <span class="font-semibold text-gray-800">📢 ${n.message}</span>
+          <span class="text-xs text-gray-400 mt-1">
+            ${new Date(n.createdAt).toLocaleString()}
+          </span>
+        </div>
+
+        <span class="px-3 py-1 text-xs rounded-full bg-purple-100 text-purple-600 font-bold">
+          New
+        </span>
+
+      </li>
+    `).join("");
+}
+
+// SEND NOTIFICATION
+async function sendNotification() {
+
+  const message = document.getElementById("msg").value;
+
+  if (!message) {
+    alert("Please write message first");
+    return;
+  }
+
+  await fetch("/notifications/add", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ message })
+  });
+
+  document.getElementById("msg").value = "";
+
+  loadNotifications();
+}
+
+loadNotifications();
+
+</script>
+
+</body>
+</html>

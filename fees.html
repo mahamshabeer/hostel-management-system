@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Fee Management</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="min-h-screen bg-cover bg-center bg-no-repeat p-8"
+style="background-image: url('https://images.unsplash.com/photo-1554224154-26032ffc0d07?auto=format&fit=crop&w=1500&q=80');">
+
+<!-- HEADER -->
+<div class="bg-gradient-to-r from-indigo-600 to-purple-600 text-white p-6 rounded-2xl shadow-lg mb-6">
+  <h1 class="text-3xl font-bold">💼 Fee Control Panel</h1>
+  <p class="text-sm opacity-80">Manage student fees, payments & records</p>
+</div>
+
+<!-- SEARCH -->
+<input id="search" oninput="searchFees()"
+  placeholder="🔍 Search student..."
+  class="border p-3 mb-4 w-full rounded-xl shadow-sm focus:ring-2 focus:ring-indigo-400">
+
+<!-- STATS CARDS -->
+<div class="grid grid-cols-3 gap-4 mb-6">
+
+  <div onclick="filterFees('all')"
+    class="cursor-pointer bg-blue-500 hover:bg-blue-600 transition text-white p-5 rounded-2xl text-center shadow-md">
+    <h2 class="text-sm opacity-90">Total Fees</h2>
+    <p id="totalFees" class="text-3xl font-bold">0</p>
+  </div>
+
+  <div onclick="filterFees('paid')"
+    class="cursor-pointer bg-green-500 hover:bg-green-600 transition text-white p-5 rounded-2xl text-center shadow-md">
+    <h2 class="text-sm opacity-90">Paid</h2>
+    <p id="paidFees" class="text-3xl font-bold">0</p>
+  </div>
+
+  <div onclick="filterFees('unpaid')"
+    class="cursor-pointer bg-red-500 hover:bg-red-600 transition text-white p-5 rounded-2xl text-center shadow-md">
+    <h2 class="text-sm opacity-90">Unpaid</h2>
+    <p id="unpaidFees" class="text-3xl font-bold">0</p>
+  </div>
+
+</div>
+
+<!-- ADD FEE FORM -->
+<div class="bg-white p-6 rounded-2xl shadow-lg mb-6 border">
+
+  <h2 class="font-bold text-lg mb-4 text-gray-700">➕ Add Fee</h2>
+
+  <div class="flex flex-wrap gap-3">
+
+    <select id="userId" class="border p-3 rounded-lg flex-1">
+      <option value="">Select Student</option>
+    </select>
+
+    <select id="month" class="border p-3 rounded-lg flex-1">
+      <option value="">Select Month</option>
+      <option value="Jan-2026">Jan-2026</option>
+      <option value="Feb-2026">Feb-2026</option>
+      <option value="Mar-2026">Mar-2026</option>
+      <option value="Apr-2026">Apr-2026</option>
+      <option value="May-2026">May-2026</option>
+      <option value="Jun-2026">Jun-2026</option>
+      <option value="Jul-2026">Jul-2026</option>
+      <option value="Aug-2026">Aug-2026</option>
+      <option value="Sep-2026">Sep-2026</option>
+      <option value="Oct-2026">Oct-2026</option>
+      <option value="Nov-2026">Nov-2026</option>
+      <option value="Dec-2026">Dec-2026</option>
+    </select>
+
+    <input id="amount" placeholder="Amount" class="border p-3 rounded-lg flex-1">
+    <input type="date" id="dueDate" class="border p-3 rounded-lg flex-1">
+
+    <button onclick="addFee()"
+      class="bg-indigo-600 hover:bg-indigo-700 transition text-white px-6 py-3 rounded-lg shadow">
+      Add Fee
+    </button>
+
+  </div>
+
+</div>
+
+<!-- LIST -->
+<div id="feeList"></div>
+
+<script>
+
+  const role = localStorage.getItem("role");
+
+let allFees = [];   // GLOBAL
+
+async function loadStudents() {
+
+  const res = await fetch("/users");
+  const users = await res.json();
+
+  const select = document.getElementById("userId");
+
+  select.innerHTML = `<option value="">Select Student</option>`;
+
+  users.forEach(user => {
+    select.innerHTML += `
+      <option value="${user._id}">
+        ${user.name}
+      </option>
+    `;
+  });
+}
+
+// LOAD FEES
+async function loadFees() {
+
+  const res = await fetch("/fees");
+  const data = await res.json();
+
+  allFees = data;
+
+  // URL STATUS
+  const params = new URLSearchParams(window.location.search);
+
+  const status = params.get("status");
+
+  // FILTER AUTOMATIC
+  if (status === "paid") {
+
+    renderFees(
+      allFees.filter(f => f.status === "paid")
+    );
+
+  }
+
+  else if (status === "unpaid") {
+
+    renderFees(
+      allFees.filter(f => f.status === "unpaid")
+    );
+
+  }
+
+  else {
+
+    renderFees(allFees);
+
+  }
+}
+
+// RENDER FEES
+function renderFees(data) {
+
+  document.getElementById("feeList").innerHTML = data.map(fee => {
+
+    let isOverdue = fee.status === "unpaid" && new Date(fee.dueDate) < new Date();
+
+    return `
+    <div class="bg-white p-5 rounded-2xl shadow-md border-l-4 ${isOverdue ? 'border-red-500' : 'border-indigo-500'} mb-4 hover:shadow-xl transition">
+
+      <div class="flex justify-between items-center">
+        <h2 class="text-lg font-bold">👤 ${fee.userId?.name || "Unknown"}</h2>
+
+        <span class="px-3 py-1 rounded-full text-xs font-semibold
+          ${fee.status === 'paid' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}">
+          ${fee.status}
+        </span>
+      </div>
+
+      <p class="text-gray-600 mt-2">📅 Month: ${fee.month}</p>
+      <p class="text-gray-600">💰 Amount: ${fee.amount}</p>
+
+      <div class="mt-4">
+      ${fee.status === "unpaid" ? `
+  ${role === "warden" ? `
+    <button onclick="markPaid('${fee._id}')"
+      class="bg-green-500 text-white px-4 py-2 rounded-lg">
+      Mark Paid
+    </button>
+` : `
+  <span class="text-gray-500 text-sm">
+    Warden only
+  </span>
+`}
+        ` : `
+          <span class="text-green-600 font-bold">✔ Paid</span>
+        `}
+      </div>
+
+    </div>
+    `;
+  }).join("");
+}
+
+// FILTER
+function filterFees(type) {
+
+  if (type === "all") renderFees(allFees);
+  else if (type === "paid") renderFees(allFees.filter(f => f.status === "paid"));
+  else renderFees(allFees.filter(f => f.status === "unpaid"));
+}
+
+// SEARCH
+function searchFees() {
+
+  const val = document.getElementById("search").value.toLowerCase();
+
+  renderFees(allFees.filter(f =>
+    f.userId?.name?.toLowerCase().includes(val)
+  ));
+}
+
+// STATS
+async function loadFeeStats() {
+
+  const res = await fetch("/fees/stats");
+  const data = await res.json();
+
+  document.getElementById("totalFees").innerText = data.total;
+  document.getElementById("paidFees").innerText = data.paid;
+  document.getElementById("unpaidFees").innerText = data.unpaid;
+}
+
+// ADD FEE
+async function addFee() {
+
+  try {
+
+    const res = await fetch("/fees/add", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        userId: document.getElementById("userId").value,
+        month: document.getElementById("month").value,
+        amount: document.getElementById("amount").value,
+        dueDate: document.getElementById("dueDate").value
+      })
+    });
+
+    const data = await res.json();
+
+    alert(data.message || "Fee added");
+
+    loadFees();
+    loadFeeStats();
+
+  } catch (err) {
+    alert("Request failed");
+  }
+}
+
+// MARK PAID
+async function markPaid(id) {
+
+  try {
+
+    const res = await fetch("/fees/pay/" + id, {
+
+  method: "PUT",
+
+  headers: {
+    "Content-Type": "application/json"
+  },
+
+  body: JSON.stringify({
+    role: localStorage.getItem("role")
+  })
+
+});
+    const data = await res.json();
+
+    if (!res.ok) return alert(data.message || "Failed");
+
+    alert("Fee marked as paid ✔");
+
+    loadFees();
+    loadFeeStats();
+
+  } catch (err) {
+    alert("Request failed");
+  }
+}
+
+// INIT
+loadStudents();
+loadFees();
+loadFeeStats();
+
+setInterval(loadFeeStats, 5000);
+
+</script>
+
+</body>
+</html>

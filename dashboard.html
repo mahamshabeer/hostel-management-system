@@ -1,0 +1,955 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Admin Dashboard</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <style>
+    body {
+      font-family: sans-serif;
+    }
+
+    .dark {
+      background: #0f172a;
+      color: white;
+    }
+
+    .dark .card {
+      background: #1e293b !important;
+      color: white !important;
+    }
+
+    .dark .sidebar {
+      background: #020617 !important;
+    }
+
+    .dark h1,
+    .dark h2,
+    .dark h3,
+    .dark p {
+      color: white !important;
+    }
+
+    .card {
+      transition: 0.3s;
+    }
+
+    .card:hover {
+      transform: translateY(-5px);
+    }
+
+    .section-title {
+      font-size: 22px;
+      font-weight: bold;
+      margin-bottom: 18px;
+      color: #1e293b;
+    }
+
+    .dark .section-title {
+      color: white;
+    }
+  </style>
+</head>
+
+<body class="bg-gradient-to-br from-slate-100 via-gray-100 to-slate-200 flex min-h-screen">
+
+<!-- SIDEBAR -->
+<div class="w-64 h-screen sticky top-0 p-5 text-white sidebar"
+     style="background: linear-gradient(180deg, #020617, #1e293b);">
+
+  <h2 class="text-2xl font-bold mb-10">🏠 Hostel Admin</h2>
+
+  <div class="space-y-2">
+
+    <a href="dashboard.html"
+      class="block py-3 px-4 rounded-xl hover:bg-slate-700 transition">
+      📊 Dashboard
+    </a>
+
+    <a href="users.html"
+      class="block py-3 px-4 rounded-xl hover:bg-slate-700 transition">
+      👥 Users
+    </a>
+
+    <a href="rooms.html"
+      class="block py-3 px-4 rounded-xl hover:bg-slate-700 transition">
+      🏠 Rooms
+    </a>
+
+    <a href="complaints.html"
+      class="block py-3 px-4 rounded-xl hover:bg-slate-700 transition">
+      📝 Complaints
+    </a>
+
+    <a href="notifications.html"
+      class="block py-3 px-4 rounded-xl hover:bg-slate-700 transition">
+      🔔 Notifications
+    </a>
+
+    <a href="reports.html"
+      class="block py-3 px-4 rounded-xl hover:bg-slate-700 transition">
+      📑 Reports
+    </a>
+
+    <a href="profile.html"
+      class="block py-3 px-4 rounded-xl hover:bg-slate-700 transition">
+      👤 My Profile
+    </a>
+
+  </div>
+
+  <button onclick="toggleDarkMode()"
+    class="mt-8 w-full bg-slate-800 hover:bg-slate-700 py-3 rounded-2xl transition">
+    🌙 Dark Mode
+  </button>
+
+</div>
+
+<!-- MAIN CONTENT -->
+<div class="flex-1 p-8 overflow-y-auto">
+
+  <!-- TOP HEADER -->
+  <div class="flex justify-between items-center mb-8">
+
+    <div>
+      <h1 class="text-4xl font-bold text-slate-800">
+        Admin Dashboard
+      </h1>
+
+      <p class="text-gray-500 mt-2">
+        Manage hostel operations efficiently
+      </p>
+    </div>
+
+    <div class="bg-white dark:bg-slate-800 px-5 py-3 rounded-2xl shadow">
+      <p class="font-semibold">👋 Welcome Admin</p>
+    </div>
+
+  </div>
+
+  <!-- FINANCE SECTION -->
+  <div class="mb-10">
+
+    <h2 class="section-title">
+      💰 Fee Analytics
+    </h2>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
+
+      <div onclick="navigate('fees.html')"
+        class="card cursor-pointer bg-emerald-500 text-white p-6 rounded-3xl shadow-xl">
+
+        <h2 class="text-lg">Total Collection</h2>
+
+        <p id="totalCollection"
+          class="text-4xl font-bold mt-4">
+          0
+        </p>
+
+      </div>
+
+      <div onclick="navigate('fees.html?status=unpaid')"
+        class="card cursor-pointer bg-rose-500 text-white p-6 rounded-3xl shadow-xl">
+
+        <h2 class="text-lg">Pending Dues</h2>
+
+        <p id="pendingCollection"
+          class="text-4xl font-bold mt-4">
+          0
+        </p>
+
+      </div>
+
+      <div onclick="navigate('fees.html?status=paid')"
+        class="card cursor-pointer bg-cyan-500 text-white p-6 rounded-3xl shadow-xl">
+
+        <h2 class="text-lg">Paid Fees</h2>
+
+        <p id="totalPaid"
+          class="text-4xl font-bold mt-4">
+          0
+        </p>
+
+      </div>
+
+      <div onclick="navigate('fees.html?status=unpaid')"
+        class="card cursor-pointer bg-orange-500 text-white p-6 rounded-3xl shadow-xl">
+
+        <h2 class="text-lg">Unpaid Fees</h2>
+
+        <p id="totalUnpaid"
+          class="text-4xl font-bold mt-4">
+          0
+        </p>
+
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- MANAGEMENT SECTION -->
+  <div class="mb-10">
+
+    <h2 class="section-title">
+      🏢 Hostel Management
+    </h2>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
+
+      <div onclick="navigate('users.html')"
+        class="card cursor-pointer bg-blue-500 text-white p-6 rounded-3xl shadow-xl">
+
+        <h2 class="text-lg">Total Users</h2>
+
+        <p id="users"
+          class="text-4xl font-bold mt-4">
+          0
+        </p>
+
+      </div>
+
+      <div onclick="navigate('rooms.html')"
+        class="card cursor-pointer bg-green-500 text-white p-6 rounded-3xl shadow-xl">
+
+        <h2 class="text-lg">Total Rooms</h2>
+
+        <p id="rooms"
+          class="text-4xl font-bold mt-4">
+          0
+        </p>
+
+      </div>
+
+      <div onclick="navigate('users.html?filter=assigned')"
+        class="card cursor-pointer bg-purple-500 text-white p-6 rounded-3xl shadow-xl">
+
+        <h2 class="text-lg">Assigned Students</h2>
+
+        <p id="assigned"
+          class="text-4xl font-bold mt-4">
+          0
+        </p>
+
+      </div>
+
+      <div onclick="navigate('rooms.html')"
+        class="card cursor-pointer bg-cyan-500 text-white p-6 rounded-3xl shadow-xl">
+
+        <h2 class="text-lg">Occupancy %</h2>
+
+        <p id="occupancyRate"
+          class="text-4xl font-bold mt-4">
+          0%
+        </p>
+
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- COMPLAINTS SECTION -->
+  <div class="mb-10">
+
+    <h2 class="section-title">
+      📝 Complaints & Requests
+    </h2>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
+
+      <div onclick="navigate('requests.html')"
+        class="card cursor-pointer bg-pink-500 text-white p-6 rounded-3xl shadow-xl">
+
+        <h2 class="text-lg">Room Requests</h2>
+
+        <p id="requests"
+          class="text-4xl font-bold mt-4">
+          0
+        </p>
+
+      </div>
+
+      <div onclick="navigate('complaints.html')"
+        class="card cursor-pointer bg-yellow-500 text-white p-6 rounded-3xl shadow-xl">
+
+        <h2 class="text-lg">Complaints</h2>
+
+        <p id="complaints"
+          class="text-4xl font-bold mt-4">
+          0
+        </p>
+
+      </div>
+
+      <div onclick="navigate('complaints.html?status=pending')"
+        class="card cursor-pointer bg-red-500 text-white p-6 rounded-3xl shadow-xl">
+
+        <h2 class="text-lg">Pending</h2>
+
+        <p id="pending"
+          class="text-4xl font-bold mt-4">
+          0
+        </p>
+
+      </div>
+
+      <div onclick="navigate('complaints.html?status=solved')"
+        class="card cursor-pointer bg-teal-500 text-white p-6 rounded-3xl shadow-xl">
+
+        <h2 class="text-lg">Solved %</h2>
+
+        <p id="solveRate"
+          class="text-4xl font-bold mt-4">
+          0%
+        </p>
+
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- OTHER ANALYTICS -->
+  <div>
+
+    <h2 class="section-title">
+      📈 Other Analytics
+    </h2>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+
+      <div onclick="navigate('notifications.html')"
+        class="card cursor-pointer bg-indigo-500 text-white p-6 rounded-3xl shadow-xl">
+
+        <h2 class="text-lg">Notifications</h2>
+
+        <p id="notifications"
+          class="text-4xl font-bold mt-4">
+          0
+        </p>
+
+      </div>
+
+      <div onclick="navigate('fees.html')"
+        class="card cursor-pointer bg-emerald-600 text-white p-6 rounded-3xl shadow-xl">
+
+        <h2 class="text-lg">Total Revenue</h2>
+
+        <p id="totalRevenue"
+          class="text-4xl font-bold mt-4">
+          0
+        </p>
+
+      </div>
+
+      <div onclick="navigate('fees.html?status=unpaid')"
+        class="card cursor-pointer bg-orange-600 text-white p-6 rounded-3xl shadow-xl">
+
+        <h2 class="text-lg">Pending Fees</h2>
+
+        <p id="pendingFees"
+          class="text-4xl font-bold mt-4">
+          0
+        </p>
+
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- AI FEEDBACK SECTION -->
+<div class="mb-10">
+
+  <h2 class="section-title">
+    🤖 AI Feedback Intelligence
+  </h2>
+
+  <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
+
+  <!-- AI ROOM ALLOCATION -->
+<div class="bg-gradient-to-br from-violet-600 to-purple-700 
+            text-white p-6 rounded-3xl shadow-xl
+            hover:scale-[1.02] transition duration-300">
+
+  <div class="flex items-center justify-between">
+
+    <div>
+      <h2 class="text-xl font-bold">
+        🤖 AI Room Allocation
+      </h2>
+
+      <p class="text-sm text-violet-100 mt-2">
+        Smart automatic room assignment
+      </p>
+    </div>
+
+    <div class="text-4xl">
+      🏠
+    </div>
+
+  </div>
+
+  <!-- BUTTON -->
+  <button onclick="runAutoAllocation(event)"
+    class="mt-6 w-full bg-white text-violet-700
+           py-3 rounded-2xl font-semibold
+           hover:bg-violet-100 transition">
+
+    Run AI Allocation
+
+  </button>
+
+</div>
+
+</div>
+
+
+<!-- AI + COMPLAINT STATS GRID -->
+<div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
+  
+
+  <!-- AI SCORE -->
+  <div onclick="navigate('ai-dashboard.html')"
+    class="cursor-pointer bg-indigo-500 text-white p-6 rounded-3xl shadow-xl hover:scale-[1.03] transition">
+
+    <h2 class="text-lg font-semibold">AI Score</h2>
+    <p id="aiScore" class="text-4xl font-bold mt-4">0%</p>
+
+  </div>
+
+  <!-- TOTAL FEEDBACK -->
+  <div onclick="navigate('feedback.html')"
+    class="cursor-pointer bg-blue-500 text-white p-6 rounded-3xl shadow-xl hover:scale-[1.03] transition">
+
+    <h2 class="text-lg font-semibold">Total Feedback</h2>
+    <p id="totalFeedback" class="text-4xl font-bold mt-4">0</p>
+
+  </div>
+
+  <!-- POSITIVE FEEDBACK -->
+  <div onclick="navigate('feedback.html?type=positive')"
+    class="cursor-pointer bg-green-500 text-white p-6 rounded-3xl shadow-xl hover:scale-[1.03] transition">
+
+    <h2 class="text-lg font-semibold">Positive</h2>
+    <p id="positiveFeedback" class="text-4xl font-bold mt-4">0</p>
+
+  </div>
+
+  <!-- NEGATIVE FEEDBACK -->
+  <div onclick="navigate('feedback.html?type=negative')"
+    class="cursor-pointer bg-red-500 text-white p-6 rounded-3xl shadow-xl hover:scale-[1.03] transition">
+
+    <h2 class="text-lg font-semibold">Negative</h2>
+    <p id="negativeFeedback" class="text-4xl font-bold mt-4">0</p>
+
+  </div>
+
+</div>
+
+<!-- 🟢 COMPLAINT FILTER SECTION (SEPARATE) -->
+<div class="mt-10">
+
+  <h2 class="section-title">📝 Complaints Priority Filter</h2>
+
+  <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
+
+    <div onclick="setPriorityFilter('High')"
+      class="cursor-pointer bg-red-600 text-white p-6 rounded-3xl shadow-xl hover:scale-[1.03] transition">
+
+      <h2 class="text-lg font-semibold">High Priority</h2>
+      <p id="highCount" class="text-4xl font-bold mt-4">0</p>
+
+    </div>
+
+    <div onclick="setPriorityFilter('Medium')"
+      class="cursor-pointer bg-yellow-500 text-white p-6 rounded-3xl shadow-xl hover:scale-[1.03] transition">
+
+      <h2 class="text-lg font-semibold">Medium Priority</h2>
+      <p id="mediumCount" class="text-4xl font-bold mt-4">0</p>
+
+    </div>
+
+    <div onclick="setPriorityFilter('Low')"
+      class="cursor-pointer bg-green-500 text-white p-6 rounded-3xl shadow-xl hover:scale-[1.03] transition">
+
+      <h2 class="text-lg font-semibold">Low Priority</h2>
+      <p id="lowCount" class="text-4xl font-bold mt-4">0</p>
+
+    </div>
+
+    <div onclick="setPriorityFilter('all')"
+      class="cursor-pointer bg-blue-600 text-white p-6 rounded-3xl shadow-xl hover:scale-[1.03] transition">
+
+      <h2 class="text-lg font-semibold">Total Complaints</h2>
+      <p id="totalComplaints" class="text-4xl font-bold mt-4">0</p>
+
+    </div>
+
+  </div>
+
+  <div id="complaintList" class="mt-6"></div>
+
+</div>
+
+ 
+<script>
+
+(function () {
+
+  const theme = localStorage.getItem("theme");
+
+  if (theme === "dark") {
+    document.body.classList.add("dark");
+  }
+
+})();
+
+let allComplaintsData = [];
+let selectedPriority = "all";
+
+
+// ================= PAGE LOAD =================
+
+window.onload = function () {
+
+  const role = localStorage.getItem("role");
+
+  if (!role || role !== "admin") {
+
+    window.location.href = "auth.html";
+    return;
+
+  }
+
+  loadStats();
+
+  // ✅ AI STATS
+  loadAIStats();
+
+  // AI COMPLAINTS
+  loadComplaintAIStats(); 
+
+  // ✅ STUDENTS FOR DROPDOWN
+  loadStudents();
+ // COMPLAINT DATA
+  loadComplaintData();
+
+};
+
+
+
+// ================= LOAD DASHBOARD STATS =================
+
+async function loadStats() {
+
+  try {
+
+    const [
+      users,
+      rooms,
+      requests,
+      complaints,
+      notifications,
+      feeStats
+    ] = await Promise.all([
+
+      fetch("/users").then(res => res.json()),
+      fetch("/rooms").then(res => res.json()),
+      fetch("/admin/requests").then(res => res.json()),
+      fetch("/complaints").then(res => res.json()),
+      fetch("/notifications").then(res => res.json()),
+      fetch("/fees/admin/stats").then(res => res.json())
+
+    ]);
+
+
+
+    // ================= USERS =================
+
+    document.getElementById("users").innerText =
+      users?.length || 0;
+
+
+
+    // ================= ROOMS =================
+
+    document.getElementById("rooms").innerText =
+      rooms?.length || 0;
+
+
+
+    // ================= ASSIGNED =================
+
+    document.getElementById("assigned").innerText =
+      users.filter(user => user.room).length;
+
+
+
+    // ================= REQUESTS =================
+
+    document.getElementById("requests").innerText =
+      requests?.length || 0;
+
+
+
+    // ================= COMPLAINTS =================
+
+    document.getElementById("complaints").innerText =
+      complaints?.length || 0;
+
+
+
+    // ================= PENDING =================
+
+    document.getElementById("pending").innerText =
+      complaints.filter(c =>
+        c.status === "pending"
+      ).length;
+
+
+
+    // ================= SOLVED RATE =================
+
+    const solvedComplaints =
+      complaints.filter(c =>
+        c.status === "solved" ||
+        c.status === "resolved"
+      ).length;
+
+    const solveRate =
+      complaints.length > 0
+      ? Math.round((solvedComplaints / complaints.length) * 100)
+      : 0;
+
+    document.getElementById("solveRate").innerText =
+      solveRate + "%";
+
+
+
+    // ================= NOTIFICATIONS =================
+
+    document.getElementById("notifications").innerText =
+      notifications?.length || 0;
+
+
+
+    // ================= OCCUPANCY =================
+
+    const totalCapacity =
+      rooms.reduce((sum, room) =>
+        sum + (room.capacity || 0), 0);
+
+    const occupiedSeats =
+      rooms.reduce((sum, room) =>
+        sum + (room.students?.length || 0), 0);
+
+    const occupancyRate =
+      totalCapacity > 0
+      ? Math.round((occupiedSeats / totalCapacity) * 100)
+      : 0;
+
+    document.getElementById("occupancyRate").innerText =
+      occupancyRate + "%";
+
+
+
+    // ================= FEES =================
+
+    document.getElementById("totalCollection").innerText =
+      feeStats?.totalCollection || 0;
+
+    document.getElementById("pendingCollection").innerText =
+      feeStats?.pendingCollection || 0;
+
+    document.getElementById("totalPaid").innerText =
+      feeStats?.totalPaid || 0;
+
+    document.getElementById("totalUnpaid").innerText =
+      feeStats?.totalUnpaid || 0;
+
+    document.getElementById("totalRevenue").innerText =
+      feeStats?.totalCollection || 0;
+
+    document.getElementById("pendingFees").innerText =
+      feeStats?.pendingCollection || 0;
+
+  }
+
+  catch (error) {
+
+    console.log("Dashboard Stats Error:", error);
+
+  }
+
+}
+
+
+
+// ================= AUTO REFRESH =================
+
+setInterval(() => {
+
+  loadStats();
+
+}, 5000);
+
+
+let studentsList = [];
+
+async function loadStudents() {
+
+  const res = await fetch("/users");
+
+  const data = await res.json();
+
+  const students = data.filter(
+    u => u.role === "student"
+  );
+
+  const select =
+    document.getElementById("studentSelect");
+
+  select.innerHTML = "";
+
+  students.forEach(st => {
+
+    const option =
+      document.createElement("option");
+
+    option.value = st._id;
+
+    option.textContent =
+      `${st.name} (${st.email})`;
+
+    select.appendChild(option);
+
+  });
+}
+
+//==AI LOAD STATS
+
+async function loadAIStats() {
+
+  try {
+
+    const res = await fetch("/ai/ranking");
+    const data = await res.json();
+
+    document.getElementById("aiScore").innerText =
+      data.score + "%";
+
+    document.getElementById("totalFeedback").innerText =
+      data.totalFeedback;
+
+    document.getElementById("positiveFeedback").innerText =
+      data.positive;
+
+    document.getElementById("negativeFeedback").innerText =
+      data.negative;
+
+  } catch (err) {
+    console.log("AI ERROR:", err);
+  }
+}
+
+
+async function loadComplaintAIStats() {
+
+  try {
+
+    const res = await fetch("/complaints/stats/ai");
+    const data = await res.json();
+
+    document.getElementById("highCount").innerText = data.high;
+    document.getElementById("mediumCount").innerText = data.medium;
+    document.getElementById("lowCount").innerText = data.low;
+    document.getElementById("totalComplaints").innerText = data.total;
+
+  } catch (err) {
+    console.log(err);
+  }
+}
+
+async function loadComplaintData() {
+
+  try {
+
+    const res = await fetch("/complaints");
+    const data = await res.json();
+
+    allComplaintsData = data;
+
+    // 🔥 ADD THIS LINE (IMPORTANT)
+    renderFilteredComplaints();
+
+  } catch (err) {
+    console.log(err);
+  }
+
+}
+
+
+// ================= MODAL OPEN =================
+function runAutoAllocation(event) {
+
+  event.stopPropagation();
+
+  document
+    .getElementById("studentModal")
+    .classList.remove("hidden");
+
+  loadStudents();
+}
+
+// ================= MODAL CLOSE =================
+function closeModal() {
+
+  const modal = document.getElementById("studentModal");
+
+  if (modal) {
+    modal.classList.add("hidden");
+  }
+}
+
+
+// ================= ASSIGN STUDENT =================
+async function confirmAssign() {
+
+  const userId = document.getElementById("studentSelect").value;
+
+  if (!userId) {
+    alert("Please select a student");
+    return;
+  }
+
+  try {
+
+    const res = await fetch(`/rooms/auto-assign/${userId}`, {
+      method: "POST"
+    });
+
+    const data = await res.json();
+
+    alert(data.message);
+
+    closeModal();
+    loadStats();
+
+  } catch (err) {
+    console.log(err);
+    alert("AI Allocation Failed");
+  }
+}
+
+
+// ================= DARK MODE =================
+
+function toggleDarkMode() {
+
+  document.body.classList.toggle("dark");
+
+  localStorage.setItem(
+    "theme",
+    document.body.classList.contains("dark")
+      ? "dark"
+      : "light"
+  );
+
+}
+
+
+
+// ================= NAVIGATION =================
+
+function navigate(page) {
+
+  window.location.href = page;
+
+}
+
+
+
+window.setPriorityFilter = function(priority) {
+
+  console.log("clicked:", priority);
+
+  selectedPriority = priority;
+
+  renderFilteredComplaints();
+
+}
+
+window.renderFilteredComplaints = function() {
+
+  let filtered = (allComplaintsData || []).filter(
+  c => c.status !== "solved"
+);
+
+  if (selectedPriority !== "all") {
+    filtered = filtered.filter(c =>
+      c.priority === selectedPriority
+    );
+  }
+
+  const list = document.getElementById("complaintList");
+
+  if (!list) {
+    console.log("complaintList missing in HTML");
+    return;
+  }
+
+  list.innerHTML = filtered.map(c => `
+    <div class="p-4 bg-white rounded-xl shadow mb-2">
+      <p class="font-semibold">${c.message}</p>
+
+<span class="
+  text-sm font-bold
+  ${c.priority === 'High' ? 'text-red-600' : ''}
+  ${c.priority === 'Medium' ? 'text-yellow-600' : ''}
+  ${c.priority === 'Low' ? 'text-green-600' : ''}
+">
+  ${c.priority}
+</span>
+      
+    </div>
+  `).join("");
+
+}
+
+</script>
+
+<!-- STUDENT SELECT MODAL -->
+<div id="studentModal"
+  class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+
+  <div class="bg-white p-6 rounded-3xl w-96 shadow-2xl">
+
+    <h2 class="text-xl font-bold mb-4">
+      Select Student
+    </h2>
+
+    <select id="studentSelect"
+      class="w-full border p-3 rounded-xl mb-4">
+    </select>
+
+    <div class="flex justify-end gap-3">
+
+      <button onclick="closeModal()"
+        class="px-4 py-2 rounded-xl bg-gray-200">
+        Cancel
+      </button>
+
+      <button onclick="confirmAssign()"
+        class="px-4 py-2 rounded-xl bg-violet-600 text-white">
+        Assign
+      </button>
+
+    </div>
+
+  </div>
+
+</div>
+</body>
+</html>

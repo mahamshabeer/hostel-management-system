@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>AI Dashboard</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    #feedbackChart {
+  max-height: 220px !important;
+  max-width: 220px !important;
+  margin: auto;
+}
+  </style>
+</head>
+
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+<div id="loader"
+  class="fixed inset-0 bg-black flex items-center justify-center z-50">
+
+  <div class="w-16 h-16 border-4 border-blue-500
+    border-t-transparent rounded-full animate-spin">
+  </div>
+
+</div>
+
+<body class="bg-gray-900 text-white p-6">
+
+  <h1 class="text-3xl font-bold mb-6">🤖 AI Feedback</h1>
+
+  <div class="mb-6">
+
+  <button onclick="downloadPDF()"
+  class="bg-green-500 hover:bg-green-600
+  px-5 py-3 rounded-xl font-bold shadow-lg">
+
+  📄 Download AI Report
+
+</button>
+
+</div>
+
+  <!-- AI SCORE BOX -->
+  <div class="bg-indigo-600 p-6 rounded-2xl shadow-lg mb-6">
+    <h2 class="text-xl font-bold">AI Score</h2>
+    <p id="aiScore" class="text-4xl mt-2">0%</p>
+  </div>
+
+  <div class="grid grid-cols-3 gap-4 mt-6">
+
+  <div class="bg-green-500 p-4 rounded-xl text-center">
+    <h3>Positive</h3>
+    <p id="positive">0</p>
+  </div>
+
+  <div class="bg-red-500 p-4 rounded-xl text-center">
+    <h3>Negative</h3>
+    <p id="negative">0</p>
+  </div>
+
+  <div class="bg-blue-500 p-4 rounded-xl text-center">
+    <h3>Total</h3>
+    <p id="total">0</p>
+  </div>
+
+</div>
+
+<div class="bg-white/10 p-5 rounded-xl mt-6">
+
+  <h2 class="text-xl font-bold">🧠 AI Insights</h2>
+
+  <p class="mt-2" id="status"></p>
+  <p class="mt-2" id="reason"></p>
+  <p class="mt-2 text-yellow-300" id="warning"></p>
+
+</div>
+
+<div class="mt-6 bg-white/10 p-5 rounded-xl w-full max-w-md mx-auto h-[300px]">
+  <h2 class="text-xl font-bold mb-4">📊 Feedback Graph</h2>
+
+  <div class="flex justify-center items-center h-[260px]">
+  <canvas id="feedbackChart"></canvas>
+</div>
+
+</div>
+
+<div class="mt-6 bg-white/10 p-5 rounded-xl h-[250px]">
+  <h2 class="text-xl font-bold mb-4">📊 Monthly Feedback</h2>
+  <canvas id="monthlyChart"></canvas>
+</div>
+
+  <script>
+
+async function loadAI() {
+
+  const res = await fetch("/ai/ranking");
+  const data = await res.json();
+
+  document.getElementById("aiScore").innerText =
+    data.score + "%";
+
+  document.getElementById("positive").innerText =
+    data.positive;
+
+  document.getElementById("negative").innerText =
+    data.negative;
+
+  document.getElementById("total").innerText =
+    data.totalFeedback;
+
+    document.getElementById("status").innerText =
+  "Status: " + data.status;
+
+document.getElementById("reason").innerText =
+  "Reason: " + data.reason;
+
+document.getElementById("warning").innerText =
+  "Warning: " + data.warning;
+
+  loadGraph(data);
+
+}
+
+let chartInstance = null;
+
+function loadGraph(data) {
+
+  const ctx = document.getElementById("feedbackChart");
+
+  if (window.myChart) {
+    window.myChart.destroy();
+  }
+
+  window.myChart = new Chart(ctx, {
+    type: "pie",
+    data: {
+      labels: ["Positive", "Negative"],
+      datasets: [{
+        data: [data.positive, data.negative],
+        backgroundColor: ["#22c55e", "#ef4444"]
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      layout: {
+        padding: 10
+      },
+      plugins: {
+        legend: {
+          position: "bottom"
+        }
+      }
+    }
+  });
+
+}
+
+//MONTHLY GRAPH
+
+async function loadMonthlyGraph() {
+
+  const res = await fetch("/feedback/monthly");
+  const data = await res.json();
+
+  const labels = Object.keys(data);
+  const values = Object.values(data);
+
+  console.log(labels, values); // IMPORTANT CHECK
+
+  renderMonthlyChart(labels, values);
+}
+//RENDER FUNCTION
+function renderMonthlyChart(labels, values) {
+
+  const ctx = document.getElementById("monthlyChart");
+
+  new Chart(ctx, {
+    type: "bar",
+    data: {
+      labels: labels,
+      datasets: [{
+        label: "Feedback Count",
+        data: values,
+        backgroundColor: "#3b82f6",
+        borderRadius: 10,
+        barThickness: 50
+}]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false
+    }
+  });
+
+}
+
+
+loadAI();
+
+window.addEventListener("load", () => {
+
+  setTimeout(() => {
+
+    document.getElementById("loader").style.display = "none";
+
+  }, 1000);
+
+});
+loadMonthlyGraph();
+
+async function downloadPDF() {
+
+  const res = await fetch("/ai/ranking");
+  const data = await res.json();
+
+  const { jsPDF } = window.jspdf;
+
+  const doc = new jsPDF();
+
+  // TITLE
+  doc.setFontSize(20);
+  doc.text("AI Feedback Report", 20, 20);
+
+  // SCORE
+  doc.setFontSize(14);
+
+  doc.text(
+    "AI Score: " + data.score + "%",
+    20,
+    40
+  );
+
+  doc.text(
+    "Positive Feedback: " + data.positive,
+    20,
+    55
+  );
+
+  doc.text(
+    "Negative Feedback: " + data.negative,
+    20,
+    70
+  );
+
+  doc.text(
+    "Total Feedback: " + data.totalFeedback,
+    20,
+    85
+  );
+
+  // INSIGHTS
+ doc.text("Status: " + String(data.status), 20, 110);
+
+  doc.text(
+    "Reason: " + data.reason,
+    20,
+    125
+  );
+
+  doc.text(
+    "Warning: " + data.warning,
+    20,
+    140
+  );
+
+  // SAVE
+  doc.save("AI-Feedback-Report.pdf");
+
+}
+
+</script>
+
+</body>
+</html>

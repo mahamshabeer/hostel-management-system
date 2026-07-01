@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Room Management</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="min-h-screen bg-cover bg-center bg-no-repeat">
+  <div class="fixed inset-0 -z-10"
+style="background-image: url('https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?auto=format&fit=crop&w=1500&q=80');">
+</div>
+<div id="toast"
+  class="hidden fixed top-5 right-5 text-white px-4 py-3 rounded-lg shadow-lg z-50">
+</div>
+
+<!-- HEADER YA BAQI CONTENT -->
+
+<!-- HEADER -->
+<h1 class="text-3xl font-bold mb-6 text-gray-800">
+  🏠 Room Management
+</h1>
+
+<!-- ADD ROOM CARD -->
+<div class="bg-white/80 backdrop-blur-md rounded-3xl shadow-lg border p-6 mb-6 w-full max-w-xl">
+
+  <h2 class="text-lg font-semibold mb-4 text-gray-700">
+    ✨ Add New Room
+  </h2>
+
+  <input id="roomNumber" placeholder="Enter Room Number"
+    class="w-full p-3 border rounded-2xl mb-3 focus:outline-none focus:ring-2 focus:ring-indigo-300 transition">
+
+  <input id="capacity" type="number" placeholder="Enter Capacity"
+    class="w-full p-3 border rounded-2xl mb-4 focus:outline-none focus:ring-2 focus:ring-indigo-300 transition">
+
+  <select id="gender"
+  class="w-full p-3 border rounded-2xl mb-4">
+  <option value="">Select Gender</option>
+  <option value="Male">Male</option>
+  <option value="Female">Female</option>
+</select>
+
+  <button onclick="addRoom()"
+    class="w-full bg-gradient-to-r from-indigo-400 via-purple-500 to-pink-400
+           hover:from-indigo-500 hover:via-purple-600 hover:to-pink-500
+           text-white px-5 py-3 rounded-2xl shadow-md
+           transition-all duration-300 active:scale-[0.98]">
+    ➕ Add Room
+  </button>
+
+</div>
+
+<!-- ROOM LIST -->
+<div class="bg-white/80 backdrop-blur-md rounded-3xl shadow-lg border p-6">
+
+  <h2 class="text-lg font-semibold mb-5 text-gray-700">
+    All Rooms
+  </h2>
+
+  <div id="roomList" class="space-y-4"></div>
+
+</div>
+
+<script>
+
+// LOAD ROOMS
+async function loadRooms() {
+
+  const res = await fetch("/rooms");
+  const rooms = await res.json();
+
+  // 👇 ADD THIS HERE
+  if (rooms.length === 0) {
+    document.getElementById("roomList").innerHTML =
+      `<p class="text-gray-500 text-center">No rooms available</p>`;
+    return;
+  }
+
+  const colors = [
+    "border-indigo-300",
+    "border-pink-300",
+    "border-purple-300",
+    "border-green-300",
+    "border-yellow-300"
+  ];
+
+  document.getElementById("roomList").innerHTML =
+    rooms.map((r, i) => `
+      
+      <div class="flex justify-between items-center p-5 rounded-2xl border-l-4 ${colors[i % colors.length]}
+        bg-white hover:shadow-md transition-all duration-200">
+
+        <!-- INFO -->
+<div>
+
+  <p class="font-semibold text-gray-800">
+    🏠 Room ${r.roomNumber}
+  </p>
+
+  <p class="text-sm text-gray-500">
+  Capacity: ${r.capacity}
+</p>
+
+<p class="text-sm text-gray-500">
+  <p class="text-sm text-gray-500">
+  Gender:
+  <span class="font-semibold text-indigo-600">
+   ${r.genderAllowed ? r.genderAllowed.toUpperCase() : "NOT SET"}
+  </span>
+</p>
+</p>
+
+  <div class="inline-block mt-2 text-xs px-3 py-1 rounded-full">
+
+  ${(() => {
+
+    const count = r.students?.length || 0;
+
+    if (count > r.capacity) {
+      return `<span class="bg-red-200 text-red-700 px-2 py-1 rounded-full"> ${count}/${r.capacity} ⚠ Overloaded</span>`;
+    }
+
+    if (count === r.capacity) {
+      return `<span class="bg-yellow-100 text-yellow-700 px-2 py-1 rounded-full"> ${count}/${r.capacity} Full</span>`;
+    }
+
+    return `<span class="bg-green-100 text-green-600 px-2 py-1 rounded-full"> ${count}/${r.capacity} Available</span>`;
+
+  })()}
+
+</div>
+
+</div>
+
+        <!-- DELETE -->
+        <button onclick="deleteRoom('${r._id}')"
+          class="bg-red-50 hover:bg-red-100 text-red-600 px-4 py-2 rounded-xl text-sm transition">
+          Delete
+        </button>
+
+      </div>
+
+    `).join("");
+}
+
+// ADD ROOM
+async function addRoom() {
+
+  const roomNumber = document.getElementById("roomNumber").value;
+  const capacity = Number(document.getElementById("capacity").value);
+  const gender = document.getElementById("gender").value;
+
+  if (!roomNumber || !capacity || capacity <= 0) {
+    alert("Please enter valid data");
+    return;
+  }
+
+  if (!gender) {
+    alert("Please select gender");
+    return;
+  }
+
+  const res = await fetch("/rooms/add", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      role: localStorage.getItem("role")
+    },
+    body: JSON.stringify({
+      roomNumber,
+      capacity,
+      gender
+    })
+  });
+
+  const data = await res.json();
+
+  if (!res.ok) {
+    showToast(data.message, "error");
+    return;
+  }
+
+  document.getElementById("roomNumber").value = "";
+  document.getElementById("capacity").value = "";
+  document.getElementById("gender").value = "";
+
+  loadRooms();
+  showToast("Room added successfully", "success");
+}
+
+// DELETE ROOM
+async function deleteRoom(id) {
+
+  const res = await fetch("/rooms/" + id, {
+  method: "DELETE",
+  headers: {
+    role: localStorage.getItem("role")
+  }
+});
+
+const data = await res.json();
+
+if (!res.ok) {
+  showToast(data.message, "error");
+  return;
+}
+
+showToast("Room deleted", "success");
+loadRooms();
+
+}
+
+// INIT
+loadRooms();
+
+function showToast(message, type = "success") {
+
+  const toast = document.getElementById("toast");
+
+  toast.innerText = message;
+
+  toast.className = `
+    fixed top-5 right-5 px-4 py-3 rounded-lg shadow-lg z-50 text-white
+    ${type === "success" ? "bg-green-500" : "bg-red-500"}
+  `;
+
+  toast.classList.remove("hidden");
+
+  setTimeout(() => {
+    toast.classList.add("hidden");
+  }, 3000);
+}
+
+
+</script>
+
+</body>
+</html>

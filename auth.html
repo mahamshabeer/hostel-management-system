@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Auth System</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="flex items-center justify-center h-screen bg-cover bg-center bg-no-repeat"
+style="background-image: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)),
+url('https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=1600&q=80');">
+
+<div class="bg-white p-8 rounded-2xl shadow-xl w-96">
+
+  <h2 class="text-2xl font-bold text-center mb-6">🏠 Hostel System</h2>
+
+  <!-- TOGGLE -->
+  <div class="flex mb-5">
+    <button onclick="showLogin()" class="w-1/2 bg-blue-500 text-white py-2 rounded-l">
+      Login
+    </button>
+    <button onclick="showSignup()" class="w-1/2 bg-gray-300 py-2 rounded-r">
+      Signup
+    </button>
+  </div>
+
+  <!-- SIGNUP -->
+<div id="signupBox">
+
+  <input id="name" type="text"
+    placeholder="Enter Name"
+    class="w-full border p-2 mb-2 rounded"
+    autocomplete="off">
+
+  <input id="email" type="email"
+    placeholder="Enter Email"
+    class="w-full border p-2 mb-2 rounded"
+    autocomplete="off"
+    readonly onfocus="this.removeAttribute('readonly');">
+
+  <div class="relative mb-2">
+
+    <input id="password" type="password"
+      placeholder="Enter Password"
+      class="w-full border p-2 rounded pr-10"
+      autocomplete="new-password"
+      readonly onfocus="this.removeAttribute('readonly');">
+
+    <span onclick="togglePassword('password')" 
+      class="absolute right-3 top-2.5 cursor-pointer">
+      👁️
+    </span>
+
+  </div>
+
+  <input id="phone" type="text"
+    placeholder="Enter Phone Number"
+    class="w-full border p-2 mb-2 rounded"
+    autocomplete="off">
+
+  <!-- GENDER -->
+  <select id="gender" class="w-full border p-2 mb-3 rounded">
+  <option value="">Select Gender</option>
+  <option value="male">Male</option>
+  <option value="female">Female</option>
+  <option value="other">Other</option>
+</select>
+
+  <!-- ROLE -->
+  <select id="role"
+    class="w-full border p-2 mb-3 rounded">
+
+    <option value="student">Student</option>
+    <option value="warden">Warden</option>
+    <option value="admin">Admin</option>
+
+  </select>
+
+  <button onclick="signup()"
+    class="w-full bg-green-500 text-white py-2 rounded">
+
+    Signup
+
+  </button>
+
+</div>
+
+  <!-- LOGIN -->
+  <div id="loginBox" class="hidden">
+
+    <input id="loginEmail" type="email"
+      placeholder="Enter Email"
+      class="w-full border p-2 mb-2 rounded"
+      autocomplete="off"
+      readonly onfocus="this.removeAttribute('readonly');">
+
+    <div class="relative mb-2">
+  <input id="loginPassword" type="password"
+    placeholder="Enter Password"
+    class="w-full border p-2 rounded pr-10"
+    autocomplete="new-password"
+    readonly onfocus="this.removeAttribute('readonly');">
+
+  <span onclick="togglePassword('loginPassword')" 
+    class="absolute right-3 top-2.5 cursor-pointer">
+    👁️
+  </span>
+</div>
+
+    <button onclick="login()"
+      class="w-full bg-blue-500 text-white py-2 rounded">
+      Login
+    </button>
+    <div class="text-right mt-2">
+  <button onclick="forgotPassword()" class="text-sm text-blue-600 hover:underline">
+    Forgot Password?
+  </button>
+</div>
+
+  </div>
+
+</div>
+
+<script>
+
+function showLogin() {
+  document.getElementById("signupBox").classList.add("hidden");
+  document.getElementById("loginBox").classList.remove("hidden");
+}
+
+function showSignup() {
+  document.getElementById("loginBox").classList.add("hidden");
+  document.getElementById("signupBox").classList.remove("hidden");
+}
+
+// SIGNUP
+
+async function signup() {
+
+  try {
+
+    if (!document.getElementById("gender").value) {
+  alert("Please select gender");
+  return;
+}
+
+    const res = await fetch("/auth/signup", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+  name: document.getElementById("name").value.trim(),
+  email: document.getElementById("email").value.trim(),
+  password: document.getElementById("password").value,
+  role: document.getElementById("role").value,
+  phone: document.getElementById("phone").value.trim(),
+  gender: document.getElementById("gender").value
+})
+    });
+
+    const data = await res.json();
+
+    console.log("SIGNUP RESPONSE:", data);
+
+    if (!res.ok) {
+      alert(data.message || "Signup failed");
+      return;
+    }
+
+    alert("Signup successful ✔ Please login now");
+
+    // clear fields
+    document.getElementById("name").value = "";
+    document.getElementById("email").value = "";
+    document.getElementById("password").value = "";
+    document.getElementById("phone").value = "";
+
+    showLogin();
+
+  } catch (err) {
+    console.log(err);
+    alert("Server error during signup");
+  }
+}
+
+
+// LOGIN
+async function login() {
+
+  try {
+
+    const email = document.getElementById("loginEmail").value.trim();
+    const password = document.getElementById("loginPassword").value;
+
+    if (!email || !password) {
+      alert("Please fill all fields");
+      return;
+    }
+
+    const res = await fetch("/auth/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, password })
+    });
+
+    const data = await res.json();
+
+    if (!res.ok || !data.user) {
+      alert("Login failed");
+      return;
+    }
+
+    // ✅ SAVE SESSION FIRST
+    localStorage.setItem("userId", data.user._id);
+    localStorage.setItem("role", data.user.role);
+
+    // ✅ DIRECT REDIRECT (NO setTimeout)
+    const role = data.user.role;
+
+    if (role === "student") {
+      window.location.href = "student-dashboard.html";
+    }
+    else if (role === "warden") {
+      window.location.href = "warden-dashboard.html";
+    }
+    else if (role === "admin") {
+      window.location.href = "dashboard.html";
+    }
+    else {
+      alert("Unknown role");
+    }
+
+  } catch (err) {
+    console.log(err);
+    alert("Server error during login");
+  }
+}
+
+function togglePassword(id) {
+  const input = document.getElementById(id);
+  if (input.type === "password") {
+    input.type = "text";
+  } else {
+    input.type = "password";
+  }
+}
+
+function forgotPassword() {
+  const email = document.getElementById("loginEmail").value;
+
+  if (!email) {
+    alert("Please enter your email first");
+    return;
+  }
+
+  alert("Password reset link sent to: " + email);
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Complaints</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="bg-gradient-to-br from-gray-100 via-blue-50 to-purple-100 p-6">
+
+<h1 class="text-3xl font-bold mb-6">
+  🛡️ Complaints Management
+</h1>
+
+<div class="flex gap-2 mb-4">
+
+  <button onclick="loadComplaints('all')"
+    class="px-3 py-1 bg-gray-200 rounded">
+    All
+  </button>
+
+  <button onclick="loadComplaints('pending')"
+    class="px-3 py-1 bg-yellow-200 rounded">
+    Pending
+  </button>
+
+  <button onclick="loadComplaints('solved')"
+    class="px-3 py-1 bg-green-200 rounded">
+    Solved
+  </button>
+
+</div>
+
+
+<!-- STATS -->
+<div class="grid grid-cols-3 gap-5 mb-6">
+
+  <div onclick="goFilter('all')"
+    class="cursor-pointer bg-yellow-500 text-white p-5 rounded-2xl text-center hover:scale-105 transition">
+
+    <h2>Total</h2>
+    <p id="complaints" class="text-3xl font-bold">0</p>
+  </div>
+
+  <div onclick="goFilter('pending')"
+    class="cursor-pointer bg-red-500 text-white p-5 rounded-2xl text-center hover:scale-105 transition">
+
+    <h2>Pending</h2>
+    <p id="pending" class="text-3xl font-bold">0</p>
+  </div>
+
+  <div onclick="goFilter('solved')"
+    class="cursor-pointer bg-green-500 text-white p-5 rounded-2xl text-center hover:scale-105 transition">
+
+    <h2>Solved</h2>
+    <p id="solved" class="text-3xl font-bold">0</p>
+  </div>
+
+</div>
+
+<!-- LIST -->
+<div class="bg-white/70 backdrop-blur-lg p-6 rounded-2xl shadow-xl border">
+
+  <h2 class="text-lg font-bold mb-4">All Complaints</h2>
+
+  <ul id="complaintList" class="space-y-3"></ul>
+
+</div>
+
+<script>
+
+  const role = localStorage.getItem("role");
+
+if (!role) {
+  window.location.href = "auth.html";
+}
+
+if (role !== "admin" && role !== "warden") {
+  window.location.href = "auth.html";
+}
+
+let allComplaints = [];
+
+// FILTER
+function goFilter(status) {
+  loadComplaints(status);
+}
+
+async function loadComplaints(status = "all") {
+
+  try {
+
+    let url = "/complaints";
+
+    if (status !== "all") {
+      url = `/complaints?status=${status}`;
+    }
+
+    const res = await fetch(url);
+    allComplaints = await res.json();
+
+    allComplaints.sort((a, b) => {
+  const priorityOrder = { High: 1, Medium: 2, Low: 3 };
+
+  return (priorityOrder[a.priority] || 999) - (priorityOrder[b.priority] || 999);
+});
+
+    renderComplaints();
+
+  } catch (err) {
+    console.log(err);
+  }
+}
+
+//RENDER
+
+function renderComplaints() {
+
+  document.getElementById("complaintList").innerHTML =
+    allComplaints.map(c => `
+
+      <li class="p-4 bg-white rounded-xl shadow flex justify-between items-start">
+
+        <!-- LEFT SIDE -->
+        <div>
+
+          <p class="
+             font-medium
+             ${c.priority === 'High' ? 'text-red-600' : ''}
+             ${c.priority === 'Medium' ? 'text-yellow-600' : ''}
+             ${c.priority === 'Low' ? 'text-green-600' : ''}
+             ">
+               ${c.message}
+
+                </p>
+
+               <span class="
+                   text-xs px-2 py-1 rounded-full
+                   ${c.priority === 'High' ? 'bg-red-100 text-red-600' : ''}
+                   ${c.priority === 'Medium' ? 'bg-yellow-100 text-yellow-700' : ''}
+                   ${c.priority === 'Low' ? 'bg-green-100 text-green-600' : ''}
+                ">
+                  ${c.priority} Priority
+               </span>
+
+          <p class="text-sm text-gray-500">
+            ${c.userId?.name || "Unknown User"}
+          </p>
+
+          <p class="text-xs text-gray-400 mt-1">
+            📅 ${
+              c.createdAt
+                ? new Date(c.createdAt).toLocaleString()
+                : "Old Complaint"
+            }
+          </p>
+
+          <!-- ACTION BUTTONS -->
+          ${role === "admin" || role === "warden" ? `
+  <div class="mt-2 flex gap-2">
+
+    ${c.status !== "solved" ? `
+      <button onclick="updateStatus('${c._id}','solved')"
+        class="bg-green-500 text-white px-2 py-1 rounded text-sm">
+        ✔ Mark as Solved
+      </button>
+    ` : ""}
+
+    ${c.status !== "pending" ? `
+      <button onclick="updateStatus('${c._id}','pending')"
+        class="bg-yellow-500 text-white px-2 py-1 rounded text-sm">
+        ⏳ Reopen
+      </button>
+    ` : ""}
+
+  </div>
+` : ""}
+
+        </div>
+
+        <!-- RIGHT SIDE STATUS BADGE -->
+        <span class="
+          px-3 py-1 rounded-full text-sm font-bold
+          ${c.status === 'pending'
+            ? 'bg-red-100 text-red-600'
+            : 'bg-green-100 text-green-600'}
+        ">
+          ${c.status === "pending"
+            ? "⏳ Pending"
+            : "✔ Solved"}
+        </span>
+
+      </li>
+
+    `).join("");
+}
+// ✅ ADDED FUNCTION (ADMIN ACTION)
+window.updateStatus = async function(id, status) {
+
+  try {
+
+    await fetch(`/complaints/${id}`, {
+      method: "PUT",
+      headers: {
+  "Content-Type": "application/json",
+  role: localStorage.getItem("role")
+},
+
+      body: JSON.stringify({ status })
+    });
+
+    loadComplaints();
+    loadStats();
+
+  } catch (err) {
+    console.log(err);
+  }
+}
+
+
+// STATS
+async function loadStats() {
+
+  const res = await fetch("/stats/complaints");
+  const data = await res.json();
+
+  document.getElementById("complaints").innerText = data.total || 0;
+  document.getElementById("pending").innerText = data.pending || 0;
+  document.getElementById("solved").innerText = data.solved || 0;
+}
+
+// INIT
+const params = new URLSearchParams(window.location.search);
+
+const status = params.get("status") || "all";
+
+loadComplaints(status);
+
+loadStats();
+
+setInterval(() => {
+
+  loadComplaints(status);
+  loadStats();
+
+}, 5000);
+
+</script>
+
+</body>
+</html>

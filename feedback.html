@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Student Feedback</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <style>
+    body {
+  margin: 0;
+  font-family: sans-serif;
+  background: linear-gradient(135deg, #0f172a, #1e293b);
+
+  min-height: 100vh;
+
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+
+  padding: 40px 0;
+
+  overflow-y: auto;
+}
+
+    .container {
+  width: 600px;              /* 🔥 bigger width */
+  background: rgba(255,255,255,0.05);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 20px;
+  padding: 25px;
+  box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+  position: relative;
+}
+
+    /* glowing effect */
+    .container::before {
+      content: "";
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: radial-gradient(circle, rgba(59,130,246,0.25), transparent 60%);
+      transform: rotate(25deg);
+      z-index: 0;
+    }
+
+    .content {
+      position: relative;
+      z-index: 2;
+    }
+
+    h1 {
+      color: white;
+      font-size: 22px;
+      text-align: center;
+      margin-bottom: 15px;
+    }
+
+    p {
+      color: #94a3b8;
+      text-align: center;
+      font-size: 13px;
+      margin-bottom: 15px;
+    }
+
+    textarea {
+  width: 100%;
+  height: 130px;
+  border-radius: 12px;
+  padding: 12px;
+  border: none;
+  outline: none;
+  resize: none;
+
+  background: rgba(255,255,255,0.08);
+
+  color: #ffffff !important;   /* 🔥 FORCE white text */
+  caret-color: #ffffff;        /* 🔥 typing cursor white */
+
+  font-size: 14px;
+}
+
+/* placeholder color fix */
+textarea::placeholder {
+  color: rgba(255,255,255,0.6);
+}
+
+    textarea::placeholder {
+      color: #cbd5e1;
+    }
+
+    button {
+  width: 100%;
+  margin-top: 15px;
+  padding: 12px;
+  border-radius: 12px;
+  border: none;
+  cursor: pointer;
+  font-weight: bold;
+
+  color: #ffffff !important;   /* 🔥 text white */
+
+  background: linear-gradient(90deg, #3b82f6, #06b6d4);
+  transition: 0.3s;
+}
+
+    button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 25px rgba(59,130,246,0.4);
+    }
+
+    .status {
+      margin-top: 10px;
+      text-align: center;
+      font-size: 13px;
+      color: #38bdf8;
+    }
+
+  </style>
+</head>
+
+<body>
+
+  <div class="container">
+
+    <div class="content">
+
+      <h1>📝 Student Feedback Portal</h1>
+      <p>Share your hostel experience to improve system</p>
+
+      <textarea id="comment" placeholder="Write your feedback..."></textarea>
+
+      <button onclick="sendFeedback()">Submit Feedback</button>
+
+      <div id="status" class="status"></div>
+
+      <div class="mt-8">
+
+  <h2 class="text-2xl font-bold text-white mb-4">
+    📋 Student Feedback
+  </h2>
+
+  <div id="feedbackList" class="space-y-4 max-h-[400px] overflow-y-auto"></div>
+
+</div>
+
+    </div>
+
+  </div>
+
+<script>
+
+async function sendFeedback() {
+
+  const comment = document.getElementById("comment").value;
+  const userId = localStorage.getItem("userId");
+
+  if (!comment) {
+    document.getElementById("status").innerText =
+      "⚠ Please write feedback first";
+    return;
+  }
+
+  const res = await fetch("/feedback/add", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ userId, comment })
+  });
+
+  const data = await res.json();
+
+  if (res.ok) {
+    document.getElementById("status").innerText =
+      "✅ Feedback submitted successfully!";
+    document.getElementById("comment").value = "";
+  } else {
+    document.getElementById("status").innerText =
+      "❌ Failed to submit feedback";
+  }
+}
+
+async function loadFeedbacks() {
+
+  try {
+
+    const params =
+      new URLSearchParams(window.location.search);
+
+    const type = params.get("type");
+
+    let url = "/feedbacks";
+
+    // ✅ FILTER SUPPORT
+    if (type) {
+      url += "?type=" + type;
+    }
+
+    const res = await fetch(url);
+
+    const data = await res.json();
+
+    const container =
+      document.getElementById("feedbackList");
+
+    // ✅ NO FEEDBACK
+    if (!data.length) {
+
+      container.innerHTML = `
+        <p class="text-white">
+          No feedback found
+        </p>
+      `;
+
+      return;
+    }
+
+    // ✅ SHOW FEEDBACKS
+    container.innerHTML = data.map(f => `
+
+      <div class="bg-white/10 border border-white/10
+        rounded-2xl p-4 backdrop-blur-lg">
+
+        <div class="flex justify-between items-center mb-2">
+
+          <h3 class="text-white font-bold text-lg">
+            ${f.userId?.name || "Student"}
+          </h3>
+
+          <span class="${
+            f.sentiment === "positive"
+            ? "text-green-400"
+            : "text-red-400"
+          } font-bold uppercase">
+
+            ${f.sentiment}
+
+          </span>
+
+        </div>
+
+        <p class="text-gray-200">
+          ${f.comment}
+        </p>
+
+      </div>
+
+    `).join("");
+
+  }
+
+  catch (err) {
+
+    console.log(err);
+
+  }
+
+}
+
+loadFeedbacks();
+
+</script>
+
+</body>
+</html>

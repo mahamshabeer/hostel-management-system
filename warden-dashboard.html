@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Warden Dashboard</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="min-h-screen bg-gradient-to-br from-slate-100 via-blue-50 to-indigo-100">
+
+<!-- TOP NAVBAR -->
+<div class="bg-white shadow-md px-6 py-4 flex justify-between items-center">
+
+  <div>
+    <h1 class="text-2xl font-bold text-gray-700">🛡️ Warden Dashboard</h1>
+    <p class="text-sm text-gray-500">Operational Control: Rooms, Students & Requests</p>
+  </div>
+
+  <button onclick="logout()"
+    class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-xl shadow">
+    Logout
+  </button>
+
+</div>
+
+<!-- MAIN STATS -->
+<div class="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+
+  <!-- STUDENTS -->
+  <div onclick="go('warden-students.html')"
+    class="cursor-pointer bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-2xl p-5 shadow-lg hover:scale-105 transition">
+
+    <h2>👨‍🎓 Students</h2>
+    <p id="students" class="text-4xl font-bold mt-3">0</p>
+
+  </div>
+
+  <!-- ROOMS -->
+  <div onclick="go('rooms.html')"
+    class="cursor-pointer bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-2xl p-5 shadow-lg hover:scale-105 transition">
+
+    <h2>🏠 Rooms</h2>
+    <p id="rooms" class="text-4xl font-bold mt-3">0</p>
+
+  </div>
+
+  <!-- REQUESTS -->
+  <div onclick="go('requests.html')"
+    class="cursor-pointer bg-gradient-to-r from-orange-400 to-red-500 text-white rounded-2xl p-5 shadow-lg hover:scale-105 transition">
+
+    <h2>📩 Requests</h2>
+    <p id="requests" class="text-4xl font-bold mt-3">0</p>
+
+  </div>
+
+  <!-- COMPLAINTS -->
+  <div onclick="go('complaints.html')"
+    class="cursor-pointer bg-gradient-to-r from-pink-500 to-fuchsia-600 text-white rounded-2xl p-5 shadow-lg hover:scale-105 transition">
+
+    <h2>📝 Complaints</h2>
+    <p id="complaints" class="text-4xl font-bold mt-3">0</p>
+
+  </div>
+
+  <!-- 👇 FEE-->
+<div onclick="go('fees.html')"
+  class="cursor-pointer p-6 rounded-2xl shadow-lg bg-indigo-500 text-white text-center hover:scale-105 transition">
+
+  <h2>Fee Management</h2>
+  <p id="fees" class="text-4xl font-bold">0</p>
+
+</div>
+
+</div>
+
+<!-- REQUEST + ACTION SECTION -->
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 px-6 pb-6">
+
+  <!-- ROOM REQUESTS -->
+  <div class="bg-white rounded-2xl shadow-lg p-6">
+
+    <h2 class="text-xl font-bold text-gray-700 mb-4">📩 Room Requests</h2>
+
+    <div id="requestList" class="space-y-3 text-gray-700">
+      Loading...
+    </div>
+
+  </div>
+
+  <!-- QUICK ACTIONS -->
+  <div class="bg-white rounded-2xl shadow-lg p-6">
+
+    <h2 class="text-xl font-bold text-gray-700 mb-5">⚡ Quick Actions</h2>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+      <a href="rooms.html" class="bg-indigo-500 text-white p-4 rounded-2xl text-center shadow hover:scale-105 transition">
+        🏠 Manage Rooms
+      </a>
+
+      <a href="warden-students.html"
+class="bg-green-500 text-white p-4 rounded-2xl text-center shadow hover:scale-105 transition">
+        
+        👥 Students
+
+</a>
+
+      <a href="complaints.html" class="bg-yellow-500 text-white p-4 rounded-2xl text-center shadow hover:scale-105 transition">
+        📝 Complaints
+      </a>
+
+      <a href="notifications.html" class="bg-purple-500 text-white p-4 rounded-2xl text-center shadow hover:scale-105 transition">
+        🔔 Notifications
+      </a>
+
+      <a href="activity.html"
+class="bg-purple-500 text-white p-4 rounded-2xl text-center shadow hover:scale-105 transition">
+
+  📋 Activities
+
+</a>
+
+      <a href="warden-reports.html"
+class="block bg-cyan-500 hover:bg-cyan-600 text-white p-3 rounded-xl text-center mt-3 shadow">
+
+  📊 Reports & Analytics
+
+</a>
+
+    </div>
+
+  </div>
+
+</div>
+
+<script>
+
+  window.addEventListener("DOMContentLoaded", () => {
+
+  const role = localStorage.getItem("role");
+
+  if (!role) {
+    window.location.href = "auth.html";
+    return;
+  }
+
+  if (role !== "warden") {
+    window.location.href = "auth.html";
+    return;
+  }
+
+  if (typeof loadStats === "function") loadStats();
+  if (typeof loadRequests === "function") loadRequests();
+  if (typeof loadNotifications === "function") loadNotifications();
+
+});
+
+// =========================
+// LOAD STATS
+// =========================
+async function loadStats() {
+
+  const users = await (await fetch('/users')).json();
+  const rooms = await (await fetch('/rooms')).json();
+  const complaints = await (await fetch('/complaints')).json();
+  const fees = await fetch("/fees/stats").then(r => r.json());
+  const req = await (await fetch('/admin/requests')).json();
+
+
+
+  document.getElementById('students').innerText = users.length;
+  document.getElementById('rooms').innerText = rooms.length;
+  document.getElementById('complaints').innerText = complaints.length;
+  document.getElementById("fees").innerText = fees.total || 0;
+
+  // ✅ TOTAL REQUESTS
+  document.getElementById('requests').innerText =
+    req.length;
+}
+
+// =========================
+// LOAD ROOM REQUESTS (MAIN FEATURE)
+// =========================
+async function loadRequests() {
+
+  try {
+
+    const res = await fetch("/admin/requests");
+    const data = await res.json();
+
+    if (!Array.isArray(data)) {
+      document.getElementById("requestList").innerHTML =
+        "<p class='text-red-500'>Invalid data</p>";
+      return;
+    }
+
+    const pending = data.filter(r => r.status === "pending");
+
+    const container = document.getElementById("requestList");
+
+    if (pending.length === 0) {
+      container.innerHTML = "<p class='text-gray-500'>No Requests</p>";
+      return;
+    }
+
+    container.innerHTML = pending.map(r => `
+      <div class="p-3 border rounded mb-2">
+
+        <b>${r.userId?.name || "Unknown"}</b><br>
+        <span class="text-sm text-gray-500">${r.userId?.email || ""}</span>
+
+        <div class="mt-2 flex gap-2">
+
+          <button onclick="approveRequest('${r._id}'); return false;"
+            class="bg-green-500 text-white px-3 py-1 rounded">
+            Approve
+          </button>
+
+          <button onclick="rejectRequest('${r._id}'); return false;"
+            class="bg-red-500 text-white px-3 py-1 rounded">
+            Reject
+          </button>
+
+        </div>
+
+      </div>
+    `).join("");
+
+  } catch (err) {
+    console.log(err);
+    document.getElementById("requestList").innerHTML =
+      "<p class='text-red-500'>Error loading requests</p>";
+  }
+}
+
+// =========================
+// APPROVE REQUEST (WARDEN CONTROL)
+// =========================
+async function approveRequest(id) {
+
+  try {
+
+    const res = await fetch("/warden/approve-request", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        requestId: id
+      })
+    });
+
+    const data = await res.json();
+
+    console.log(data);
+
+    if (!res.ok) {
+      alert(data.message || "Approve failed");
+      return;
+    }
+
+    alert("Request Approved ✔");
+
+    loadRequests();
+    loadStats();
+
+  } catch (err) {
+
+    console.log(err);
+
+    alert("Approve failed (check backend route)");
+  }
+}
+
+// =========================
+// REJECT REQUEST
+// =========================
+async function rejectRequest(id) {
+
+  try {
+
+    const res = await fetch("/warden/reject-request", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        requestId: id
+      })
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      alert(data.message || "Reject failed");
+      return;
+    }
+
+    alert("Request Rejected ❌");
+
+    loadRequests();
+    loadStats();
+
+  } catch (err) {
+
+    console.log(err);
+
+    alert("Reject failed");
+  }
+}
+
+// =========================
+// OTHER MODULES
+// =========================
+async function loadNotifications() {
+
+  const res = await fetch('/notifications');
+  const data = await res.json();
+
+  console.log(data);
+}
+
+// ✅ CLICKABLE BOXES FUNCTION
+function go(page) {
+  window.location.href = page;
+}
+
+function logout() {
+  localStorage.clear();
+  window.location.href = 'auth.html';
+}
+
+
+
+</script>
+
+</body>
+</html>

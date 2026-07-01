@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Hostel Activities</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="min-h-screen bg-gradient-to-br from-indigo-50 via-blue-50 to-cyan-50 p-6">
+
+  <!-- HEADER -->
+  <div class="flex justify-between items-center mb-8">
+
+    <div>
+
+      <h1 class="text-3xl font-bold text-gray-800">
+        📋 Hostel Activities
+      </h1>
+
+      <p class="text-gray-500">
+        Track hostel operations & activities
+      </p>
+
+    </div>
+
+    <button onclick="goBack()"
+      class="bg-indigo-500 hover:bg-indigo-600 text-white px-4 py-2 rounded-2xl shadow-lg">
+
+      ← Back
+
+    </button>
+
+  </div>
+
+  <!-- ACTIVITIES -->
+  <div id="activityList"
+    class="space-y-4">
+
+    Loading...
+
+  </div>
+
+<script>
+
+function goBack() {
+    window.location.href =
+    "warden-dashboard.html";
+
+}
+
+async function loadActivities() {
+
+  try {
+
+    const requestsRes =
+      await fetch("/requests");
+
+    const complaintsRes =
+      await fetch("/complaints");
+
+    const usersRes =
+      await fetch("/users");
+
+    const roomsRes =
+      await fetch("/rooms");
+
+    const requests =
+      await requestsRes.json();
+
+    const complaints =
+      await complaintsRes.json();
+
+    const users =
+      await usersRes.json();
+
+    const rooms =
+      await roomsRes.json();
+
+    const container =
+      document.getElementById("activityList");
+
+    let activities = [];
+
+    // REQUESTS
+    if (Array.isArray(requests)) {
+
+      requests.forEach(r => {
+
+        activities.push({
+
+          icon: "📩",
+
+          text:
+            `${r.studentName || "Student"} requested a room`
+
+        });
+
+      });
+
+    }
+
+    // COMPLAINTS
+    if (Array.isArray(complaints)) {
+
+      complaints.forEach(c => {
+
+        activities.push({
+
+          icon: "📝",
+
+          text:
+            `${c.userId?.name || "Student"} submitted complaint`
+
+        });
+
+      });
+
+    }
+
+    // USERS
+    if (Array.isArray(users)) {
+
+      users.forEach(u => {
+
+        activities.push({
+
+          icon: "👨‍🎓",
+
+          text:
+            `${u.name} joined hostel system`
+
+        });
+
+      });
+
+    }
+
+    // ROOMS
+    if (Array.isArray(rooms)) {
+
+      rooms.forEach(r => {
+
+        activities.push({
+
+          icon: "🏠",
+
+          text:
+            `Room ${r.roomNumber} has ${r.students.length} students`
+
+        });
+
+      });
+
+    }
+
+    if (!activities.length) {
+
+      container.innerHTML =
+        "<p>No activities found</p>";
+
+      return;
+
+    }
+
+    container.innerHTML = activities.map(a => `
+
+      <div class="bg-white rounded-3xl shadow-lg p-5 flex items-center gap-4 hover:shadow-2xl transition">
+
+        <div class="text-3xl">
+
+          ${a.icon}
+
+        </div>
+
+        <div>
+
+          <p class="font-semibold text-gray-700">
+
+            ${a.text}
+
+          </p>
+
+        </div>
+
+      </div>
+
+    `).join("");
+
+  }
+
+  catch (err) {
+
+    console.log(err);
+
+    document.getElementById("activityList").innerHTML =
+      "Error loading activities";
+
+  }
+  
+}
+
+loadActivities();
+
+</script>
+
+</body>
+</html>
